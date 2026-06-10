@@ -5,12 +5,22 @@ type LoginPageProps = {
   searchParams: Promise<Record<string, string | undefined>>;
 };
 
+const errorMessages: Record<string, string> = {
+  auth: "Supabase could not send the magic link. Try again in a minute.",
+  "auth-callback": "Sign-in could not complete. Request a fresh magic link and open it in the same browser.",
+  "auth-confirm": "Sign-in could not complete. Request a fresh magic link and open it in the same browser.",
+  "expired-link": "That magic link expired or was opened without its browser verifier. Request a fresh link and open it in the same browser.",
+  "invalid-email": "Enter a valid email address.",
+  "invalid-link": "That magic link is invalid or was already used. Request a fresh link to continue.",
+};
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const sent = params.sent === "1";
   const email = params.email;
   const error = params.error;
   const next = params.next ?? "/dashboard";
+  const errorMessage = error ? (errorMessages[error] ?? errorMessages["auth-callback"]) : null;
 
   return (
     <main className="min-h-screen bg-[#f7f8f3] px-5 py-8 text-[#162018]">
@@ -39,9 +49,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </div>
             ) : null}
 
-            {error ? (
+            {errorMessage ? (
               <div className="mt-6 rounded-lg border border-[#f0c0aa] bg-[#fff1eb] p-4 text-sm text-[#8a3518]">
-                Sign-in could not complete. Check Supabase auth settings and try again.
+                {errorMessage}
               </div>
             ) : null}
 

@@ -21,7 +21,7 @@ export async function requestMagicLink(formData: FormData) {
   }
 
   const supabase = await createServerSupabaseClient();
-  const redirectTo = new URL("/auth/confirm", getAppUrl());
+  const redirectTo = new URL("/auth/callback", getAppUrl());
   redirectTo.searchParams.set("next", parsed.data.next ?? "/dashboard");
 
   const { error } = await supabase.auth.signInWithOtp({

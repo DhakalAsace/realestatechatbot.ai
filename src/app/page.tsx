@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 const checkpoints = [
@@ -7,7 +8,21 @@ const checkpoints = [
   "Dashboard lead inbox with transcript and score",
 ];
 
-export default function Home() {
+type HomeProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = searchParams ? await searchParams : {};
+  const code = Array.isArray(params.code) ? params.code[0] : params.code;
+  const next = Array.isArray(params.next) ? params.next[0] : params.next;
+
+  if (code) {
+    const target = new URLSearchParams({ code });
+    if (next?.startsWith("/")) target.set("next", next);
+    redirect(`/auth/callback?${target.toString()}`);
+  }
+
   return (
     <main className="min-h-screen bg-[#f5f7f2] text-[#162018]">
       <header className="border-b border-[#d9ded2] bg-white/90">

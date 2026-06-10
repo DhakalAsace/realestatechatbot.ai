@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: false,
+    include: ["src/**/*.test.{ts,tsx}"],
+    exclude: ["node_modules/**", ".next/**", ".codex-home/**"],
   },
   resolve: {
     alias: {

@@ -85,50 +85,54 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 
 ### Build
 
-- [ ] Supabase migration structure.
-- [ ] Supabase SSR client setup for Next.js.
-- [ ] Auth pages and callbacks.
-- [ ] Protected dashboard shell.
-- [ ] Workspace creation for first user.
-- [ ] `workspaces` table with RLS.
-- [ ] `workspace_members` table with RLS.
-- [ ] `agent_profiles` table with RLS.
-- [ ] `bots` table with RLS.
-- [ ] `bot_channels` table with RLS.
-- [ ] `conversations` table.
-- [ ] `messages` table.
-- [ ] `leads` table.
-- [ ] Minimal agent profile form.
-- [ ] Minimal bot setup form.
-- [ ] Hosted public bot route, probably `/c/[slug]`.
-- [ ] Deterministic buyer lead flow.
-- [ ] Deterministic seller lead flow.
-- [ ] Lead scoring helper.
-- [ ] Conversation transcript storage.
-- [ ] Lead dashboard table.
-- [ ] Lead detail page with transcript.
-- [ ] Loading, empty, error, and success states.
-- [ ] Mobile layout pass.
+- [x] Supabase migration structure.
+- [x] Supabase SSR client setup for Next.js.
+- [x] Auth pages and callbacks.
+- [x] Protected dashboard shell.
+- [x] Workspace creation for first user.
+- [x] `workspaces` table with RLS.
+- [x] `workspace_members` table with RLS.
+- [x] `agent_profiles` table with RLS.
+- [x] `bots` table with RLS.
+- [x] `bot_channels` table with RLS.
+- [x] `conversations` table.
+- [x] `messages` table.
+- [x] `leads` table.
+- [x] Minimal agent profile form.
+- [x] Minimal bot setup form.
+- [x] Hosted public bot route at `/c/[slug]`.
+- [x] Deterministic buyer lead flow.
+- [x] Deterministic seller lead flow.
+- [x] Lead scoring helper.
+- [x] Conversation transcript storage.
+- [x] Lead dashboard table.
+- [x] Lead detail page with transcript.
+- [x] Loading, empty, error, and success states.
+- [x] Mobile-responsive layout pass in code.
 
 ### Security
 
-- [ ] RLS enabled on all exposed workspace-owned tables.
-- [ ] Server-side authorization on every private query/mutation.
-- [ ] Public chat endpoint validates active bot/channel.
-- [ ] Public chat endpoint does not allow arbitrary workspace writes.
-- [ ] Basic public endpoint rate limit or abuse guard.
-- [ ] No service role key in browser bundle.
-- [ ] Cross-workspace access test.
+- [x] RLS enabled on all exposed workspace-owned tables.
+- [x] Server-side authorization on every private query/mutation.
+- [x] Public chat endpoint validates active bot/channel.
+- [x] Public chat endpoint does not allow arbitrary workspace writes.
+- [x] Basic public endpoint rate limit / abuse guard.
+- [x] No service role key in browser bundle static asset scan.
+- [x] Cross-workspace access smoke test.
 
 ### Automated Checks
 
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] Unit tests for lead scoring and deterministic flow state.
-- [ ] Basic integration tests for public chat route.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run build`.
+- [x] Unit tests for lead scoring and deterministic flow state.
+- [x] Basic integration smoke test for public chat route against Supabase.
+- [x] Supabase migration pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] Supabase RLS/policy verification query.
 
 ### Manual Review
 
+- [ ] Supabase Auth redirect allowlist confirmed in dashboard.
 - [ ] User can sign in.
 - [ ] User can create or complete workspace setup.
 - [ ] User can create an agent profile.
@@ -142,11 +146,11 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 
 Need from user before/during Phase 1:
 
-- [ ] Confirm preferred auth providers for v1: email magic link, Google, or both.
-- [ ] Provide sample agent profile details for testing.
-- [ ] Confirm whether hosted bot URL should be `/c/[slug]` or another pattern.
+- [x] Confirm preferred auth providers for v1: email magic link.
+- [x] Provide sample agent profile details for testing.
+- [x] Confirm hosted bot URL pattern: `/c/[slug]`.
 
-Phase 1 status: next.
+Phase 1 status: ready for deployment and manual review.
 
 ## Phase 2: Widget, QR, and Channel Tracking
 

@@ -109,6 +109,17 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - AWS disk cleanup removed regenerable caches and old generated artifacts (`node_modules`, `.next`, package caches) from previous project workspaces. Root volume is now about 62% used with about 12 GB free.
 - `npm install` reports 2 moderate audit findings in generated dependencies. Review before launch-hardening.
 
+- Phase 1 implementation added Supabase migrations, SSR auth, protected dashboard, hosted `/c/[slug]` bot route, deterministic buyer/seller chat, lead scoring, transcript storage, and lead inbox/detail pages.
+- Supabase migration `202606100001_phase1_core.sql` was pushed to project `dwvkmxtumugvgytmlbsk`.
+- Supabase CLI verified all eight Phase 1 tables have RLS enabled: workspaces, workspace_members, agent_profiles, bots, bot_channels, conversations, messages, leads.
+- Vercel env vars were set for Production, Preview, and Development: Supabase URL, publishable key, server-only key, project ref, chat token secret. OpenAI key remains present but unused.
+- The server-only Supabase key uses the project service_role-compatible key because the public chat ingestion route must bypass RLS on the server while never exposing that key to the browser.
+- Automated checks passed: `npm run test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+- Temporary end-to-end smoke test passed: disposable workspace/bot -> `POST /api/chat` buyer flow -> qualified lead -> 16 transcript messages -> cleanup.
+- Cross-workspace RLS smoke test passed: user A can read own workspace, cannot read workspace B, and cannot mutate workspace B bot.
+- Browser automation was not available in this thread/AWS environment, so visual/mobile review remains a manual review item.
+- Supabase Auth redirect allowlist still needs confirmation in the Supabase dashboard before magic links are reliable in production.
+
 ## Open Questions
 
 - Which domain will be attached first: `realestatechatbot.ai`, a Vercel preview URL, or both?
@@ -116,4 +127,4 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 
 ## Manual Test Log
 
-No product tests yet. Foundation setup is in progress.
+Phase 1 automated checks passed on AWS. Manual product review is pending after deployment. Visual/browser review remains pending because browser automation was not available in this thread.

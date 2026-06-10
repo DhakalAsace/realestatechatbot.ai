@@ -102,7 +102,7 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - `OPENAI_API_KEY` is stored in AWS `.env.local` and Vercel Production, Preview, and Development environment variables. Do not commit or print the value. Rotate before public launch.
 - `npm run lint` passed.
 - `npm run build` passed locally and on Vercel.
-- AWS disk was at 100%; temporary scaffold files and npm cache were cleaned, leaving about 1.7 GB free.
+- AWS disk cleanup removed regenerable caches and old generated artifacts (`node_modules`, `.next`, package caches) from previous project workspaces. Root volume is now about 62% used with about 12 GB free.
 - `npm install` reports 2 moderate audit findings in generated dependencies. Review before launch-hardening.
 
 ## Open Questions

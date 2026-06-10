@@ -99,6 +99,7 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - Vercel org id: `team_hogI923v7Y0q0Isem7OqbioE`.
 - First production deployment succeeded.
 - Production URL: `https://realestatechatbot-ai.vercel.app`.
+- `OPENAI_API_KEY` is stored in AWS `.env.local` and Vercel Production, Preview, and Development environment variables. Do not commit or print the value. Rotate before public launch.
 - `npm run lint` passed.
 - `npm run build` passed locally and on Vercel.
 - AWS disk was at 100%; temporary scaffold files and npm cache were cleaned, leaving about 1.7 GB free.

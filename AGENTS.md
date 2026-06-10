@@ -39,13 +39,11 @@ Every feature should include:
 
 ## Commands
 
-Update these after the app is scaffolded:
-
-- dev: `pnpm dev`
-- build: `pnpm build`
-- lint: `pnpm lint`
-- test: `pnpm test`
-- test:e2e: `pnpm test:e2e`
+- dev: `npm run dev`
+- build: `npm run build`
+- lint: `npm run lint`
+- test: add when the test runner is installed
+- test:e2e: add when Playwright is installed
 
 ## Product Constraints
 

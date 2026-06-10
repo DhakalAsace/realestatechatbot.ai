@@ -1,0 +1,98 @@
+# Project Context
+
+## Identity
+
+- Product: RealEstateChatbot.ai
+- Category: AI real estate chatbot for lead capture and appointment booking
+- Core promise: Turn real estate traffic into qualified appointments 24/7.
+- Remote workspace: `/home/ec2-user/realestatechatbot.ai`
+- GitHub: `https://github.com/DhakalAsace/realestatechatbot.ai.git`
+- Supabase project ref: `dwvkmxtumugvgytmlbsk`
+
+## Current Goal
+
+Set up the remote-only foundation, then build the first vertical slice:
+
+```text
+agent creates a bot -> visitor completes buyer/seller chat -> lead appears in dashboard with transcript and score
+```
+
+## Development Rules
+
+- Keep work on AWS, not on the laptop.
+- Use only the dedicated GitHub repo for this project.
+- Use only the dedicated Supabase project ref listed above.
+- Use Vercel CLI only from this project directory after confirming the linked project.
+- Record important decisions and manual test results in this file.
+
+## Architecture Direction
+
+- Next.js App Router hosted on Vercel
+- Supabase Auth, Postgres, RLS, and Storage
+- App-owned workflow state and authorization
+- OpenAI / Vercel AI SDK later, after the deterministic hosted chat loop works
+- Structured outputs and tool calling for AI runtime
+- No Agents SDK in v1
+- No MLS/IDX in v1
+- No SMS/WhatsApp in v1
+- Stripe after product value is proven
+
+## Milestones
+
+### Phase 0: Foundation
+
+- Remote AWS folder
+- GitHub repo connected
+- Project-scoped Codex/Supabase MCP setup
+- Vercel CLI setup
+- Next.js app scaffold
+- `AGENTS.md`
+- `PROJECT_CONTEXT.md`
+- Environment variable template
+
+### Phase 1: Hosted Chatbot Product Loop
+
+- Auth
+- Workspace
+- Agent profile
+- Bot configuration
+- Hosted public bot page
+- Deterministic buyer/seller lead flow
+- Lead dashboard
+- Conversation transcript
+- Lead score and status
+
+### Phase 2: Channels
+
+- Website widget
+- QR/channel tracking
+- Campaign source attribution
+
+### Phase 3: AI Runtime
+
+- Structured output schema
+- Tool definitions
+- Deterministic validation
+- Safety rules
+- Eval fixtures
+- AI disabled fallback
+
+## Decisions
+
+### 2026-06-10
+
+- Use remote AWS dev box for this project to avoid loading the laptop.
+- Use GitHub repo `DhakalAsace/realestatechatbot.ai`.
+- Use Supabase project `dwvkmxtumugvgytmlbsk`.
+- Keep Supabase MCP isolated in project Codex config/profile instead of modifying other project MCP entries.
+- Build vertical slices instead of backend-first, UI-first, or SEO-first.
+
+## Open Questions
+
+- Which Vercel team/account should own the project?
+- Should the production Vercel project name be exactly `realestatechatbot-ai` or `realestatechatbot.ai` if Vercel accepts it?
+- Which domain will be attached first: `realestatechatbot.ai`, a Vercel preview URL, or both?
+
+## Manual Test Log
+
+No product tests yet. Foundation setup is in progress.

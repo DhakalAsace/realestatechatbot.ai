@@ -90,14 +90,13 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - GitHub HTTPS push is not authenticated on AWS.
 - A dedicated GitHub SSH deploy key was generated for this repo and must be added to GitHub with write access before pushing.
 - Supabase agent skills were installed project-level under `.agents/skills`.
-- Supabase MCP OAuth was started through the isolated `.codex-home` profile and is waiting for browser approval.
+- Supabase MCP OAuth completed successfully through the isolated `.codex-home` profile.
 
 ## Open Questions
 
 - Which Vercel team/account should own the project?
 - Should the production Vercel project name be exactly `realestatechatbot-ai` or `realestatechatbot.ai` if Vercel accepts it?
 - Which domain will be attached first: `realestatechatbot.ai`, a Vercel preview URL, or both?
-- Has the Supabase OAuth approval completed successfully?
 - Has the dedicated GitHub deploy key been added to the repo with write access?
 
 ## Manual Test Log

@@ -11,7 +11,9 @@
 
 ## Current Goal
 
-Set up the remote-only foundation, then build the first vertical slice:
+Phase 0 foundation is complete. The active planning file is `BUILD_PLAN.md`.
+
+Next, build Phase 1:
 
 ```text
 agent creates a bot -> visitor completes buyer/seller chat -> lead appears in dashboard with transcript and score
@@ -48,6 +50,7 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - Next.js app scaffold
 - `AGENTS.md`
 - `PROJECT_CONTEXT.md`
+- `BUILD_PLAN.md`
 - Environment variable template
 
 ### Phase 1: Hosted Chatbot Product Loop
@@ -94,6 +97,7 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - Supabase agent skills were installed project-level under `.agents/skills`.
 - Supabase MCP OAuth completed successfully through the isolated `.codex-home` profile.
 - Next.js App Router was scaffolded with npm, TypeScript, Tailwind CSS, ESLint, and a first static product shell.
+- `BUILD_PLAN.md` was created as the durable phase-by-phase checklist and user review gate.
 - Vercel project linked and connected to GitHub: `dhakalasaces-projects/realestatechatbot-ai`.
 - Vercel project id: `prj_lbsOq5VKQWNU5QpUQdCxHdd6EFip`.
 - Vercel org id: `team_hogI923v7Y0q0Isem7OqbioE`.

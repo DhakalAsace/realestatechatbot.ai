@@ -117,12 +117,13 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - Automated checks passed: `npm run test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 - Temporary end-to-end smoke test passed: disposable workspace/bot -> `POST /api/chat` buyer flow -> qualified lead -> 16 transcript messages -> cleanup.
 - Cross-workspace RLS smoke test passed: user A can read own workspace, cannot read workspace B, and cannot mutate workspace B bot.
-- Browser automation was not available in this thread/AWS environment, so visual/mobile review remains a manual review item.
+- Chrome browser automation is available from the local Codex app when the Codex Chrome Extension is connected. Use AWS SSH for builds, Supabase/Vercel CLI, and heavy checks to avoid loading the laptop.
 
 - Auth pivot: magic-link UI was removed after repeated Supabase default-email/PKCE friction. Phase 1 now uses email/password plus planned Google OAuth through Supabase.
 - Supabase Auth config was updated for password auth: signups enabled, email auto-confirm enabled for Phase 1, and minimum password length set to 8. Revisit email confirmation/custom SMTP before public launch.
 - Google OAuth uses the server callback `/auth/callback`; Supabase OAuth provider is configured with a Google Cloud web client. Required Google redirect URI: `https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback`.
-- Browser/Chrome control was not callable in this Codex thread, so Google Cloud console setup remains a user/browser step unless a browser-control connector becomes available.
+- Google Cloud OAuth was configured and verified through Chrome control under `dhakalasace777@gmail.com`. The OAuth client includes the production origin, the latest Vercel preview origin, and Supabase callback redirect URI.
+- Supabase migration `202606110001_allow_workspace_creator_bootstrap_select.sql` fixes first-workspace bootstrap by allowing authenticated workspace creators to read the workspace row before owner membership exists. Disposable RLS onboarding smoke test passed, and the real `dhakalasace777@gmail.com` onboarding created the Northline Realty / Sarah Patel sample bot.
 
 ## Open Questions
 
@@ -131,4 +132,4 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 
 ## Manual Test Log
 
-Phase 1 automated checks passed on AWS. Manual product review is pending after deployment. Visual/browser review remains pending because browser automation was not available in this thread.
+Phase 1 automated checks passed on AWS. Google sign-in was verified end-to-end on the latest preview and the Sarah Patel hosted bot page loads at `/c/sarah-patel`. Buyer/seller lead-capture manual review is still pending.

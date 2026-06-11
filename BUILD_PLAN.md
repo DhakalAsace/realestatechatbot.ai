@@ -132,12 +132,12 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 
 ### Manual Review
 
-- [ ] Supabase Auth redirect allowlist confirmed in dashboard.
-- [ ] User can sign in.
-- [ ] User can create or complete workspace setup.
-- [ ] User can create an agent profile.
-- [ ] User can create a bot.
-- [ ] Hosted bot link loads.
+- [x] Supabase Auth redirect allowlist confirmed in dashboard.
+- [x] User can sign in.
+- [x] User can create or complete workspace setup.
+- [x] User can create an agent profile.
+- [x] User can create a bot.
+- [x] Hosted bot link loads.
 - [ ] Visitor completes buyer flow.
 - [ ] Visitor completes seller flow.
 - [ ] Dashboard shows captured lead.

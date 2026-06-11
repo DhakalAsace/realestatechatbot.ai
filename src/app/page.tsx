@@ -1,162 +1,81 @@
-const leadRows = [
-  {
-    name: "Maya Chen",
-    intent: "Buyer",
-    area: "River Heights",
-    budget: "$475k",
-    score: 86,
-    status: "Hot",
-  },
-  {
-    name: "Owen Singh",
-    intent: "Seller",
-    area: "St. Vital",
-    budget: "Valuation",
-    score: 74,
-    status: "Warm",
-  },
+import { redirect } from "next/navigation";
+import Link from "next/link";
+
+const checkpoints = [
+  "Supabase email magic-link auth",
+  "Workspace, agent profile, and hosted bot setup",
+  "Deterministic buyer and seller lead capture",
+  "Dashboard lead inbox with transcript and score",
 ];
 
-const messages = [
-  {
-    role: "Visitor",
-    text: "I am looking for a 3 bed home under 500k in Winnipeg this summer.",
-  },
-  {
-    role: "Assistant",
-    text: "Great. Are you already pre-approved, or would you like the agent to connect you with a mortgage contact?",
-  },
-  {
-    role: "Visitor",
-    text: "Pre-approved. I would like to see options in River Heights.",
-  },
-];
+type HomeProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default function Home() {
+export default async function Home({ searchParams }: HomeProps) {
+  const params = searchParams ? await searchParams : {};
+  const code = Array.isArray(params.code) ? params.code[0] : params.code;
+  const next = Array.isArray(params.next) ? params.next[0] : params.next;
+
+  if (code) {
+    const target = new URLSearchParams({ code });
+    if (next?.startsWith("/")) target.set("next", next);
+    redirect(`/auth/callback?${target.toString()}`);
+  }
+
   return (
-    <main className="min-h-screen bg-[#f4f7f2] text-[#17201a]">
-      <header className="border-b border-[#d8ded3] bg-white/85">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
+    <main className="min-h-screen bg-[#f5f7f2] text-[#162018]">
+      <header className="border-b border-[#d9ded2] bg-white/90">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#5d766b]">
-              Phase 1
-            </p>
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#657064]">Phase 1 build</p>
             <h1 className="text-xl font-semibold">RealEstateChatbot.ai</h1>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="rounded-full bg-[#163f2f] px-3 py-1.5 text-white">
-              Hosted Chat
-            </span>
-            <span className="rounded-full border border-[#c9d2c5] bg-white px-3 py-1.5">
-              Lead Inbox
-            </span>
-          </div>
+          <nav className="flex flex-wrap gap-2 text-sm">
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-semibold" href="/c/sarah-patel">
+              Sample bot
+            </Link>
+            <Link className="rounded-md bg-[#173f2f] px-3 py-2 font-semibold text-white" href="/login">
+              Sign in
+            </Link>
+          </nav>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-4 px-5 py-5 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
-        <section className="rounded-lg border border-[#d8ded3] bg-white p-4">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-[#5d766b]">
-              Bot Setup
-            </h2>
-            <span className="rounded-full bg-[#f2c36b] px-2.5 py-1 text-xs font-medium text-[#3b2b06]">
-              Draft
-            </span>
+      <section className="mx-auto grid max-w-7xl gap-5 px-5 py-6 lg:grid-cols-[1fr_420px]">
+        <div className="rounded-lg border border-[#d9ded2] bg-white p-6 md:p-8">
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#657064]">Hosted lead assistant</p>
+          <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">
+            Turn real estate traffic into qualified appointments 24/7.
+          </h2>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[#657064]">
+            Phase 1 is the core product loop: an agent signs in, creates a hosted chatbot, a visitor completes a buyer or seller flow, and the lead appears in the dashboard with a transcript and score.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link className="rounded-md bg-[#173f2f] px-5 py-3 text-sm font-semibold text-white" href="/login">
+              Start dashboard setup
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-5 py-3 text-sm font-semibold" href="/c/sarah-patel">
+              Open /c/sarah-patel
+            </Link>
           </div>
+        </div>
 
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-[#6f786c]">Agent</p>
-              <p className="font-medium">Sarah Patel</p>
-            </div>
-            <div>
-              <p className="text-xs text-[#6f786c]">Brokerage</p>
-              <p className="font-medium">Northline Realty</p>
-            </div>
-            <div>
-              <p className="text-xs text-[#6f786c]">Service Areas</p>
-              <p className="font-medium">Winnipeg, River Heights, St. Vital</p>
-            </div>
-            <div>
-              <p className="text-xs text-[#6f786c]">Primary Goal</p>
-              <p className="font-medium">Buyer and seller leads</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-[#d8ded3] bg-white">
-          <div className="flex items-center justify-between border-b border-[#e3e7df] px-4 py-3">
-            <div>
-              <h2 className="font-semibold">Hosted Chat Preview</h2>
-              <p className="text-sm text-[#6f786c]">/c/sarah-patel</p>
-            </div>
-            <span className="rounded-full bg-[#d9ebe2] px-2.5 py-1 text-xs font-medium text-[#163f2f]">
-              Active
-            </span>
-          </div>
-
-          <div className="space-y-3 p-4">
-            {messages.map((message) => (
-              <div
-                className={
-                  message.role === "Assistant"
-                    ? "ml-auto max-w-[82%] rounded-lg bg-[#163f2f] px-4 py-3 text-white"
-                    : "max-w-[82%] rounded-lg border border-[#d8ded3] bg-[#f8faf6] px-4 py-3"
-                }
-                key={message.text}
-              >
-                <p className="mb-1 font-mono text-xs opacity-70">
-                  {message.role}
-                </p>
-                <p className="text-sm leading-6">{message.text}</p>
+        <aside className="rounded-lg border border-[#d9ded2] bg-white p-5">
+          <h3 className="font-semibold">Phase 1 checklist</h3>
+          <div className="mt-4 space-y-3">
+            {checkpoints.map((item) => (
+              <div className="flex gap-3 rounded-md bg-[#f7f9f4] p-3" key={item}>
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-[#2861a8]" />
+                <p className="text-sm leading-6">{item}</p>
               </div>
             ))}
           </div>
-
-          <div className="border-t border-[#e3e7df] p-4">
-            <div className="flex min-h-12 items-center justify-between rounded-lg border border-[#c9d2c5] bg-[#fbfcfa] px-4 text-sm text-[#6f786c]">
-              <span>Ask about buying, selling, valuation, or a showing</span>
-              <span className="font-medium text-[#2861a8]">Send</span>
-            </div>
+          <div className="mt-5 rounded-md bg-[#fff5df] p-3 text-sm leading-6 text-[#6c4b0b]">
+            Supabase is connected. Sign in, finish onboarding, then open /c/sarah-patel to capture review leads.
           </div>
-        </section>
-
-        <section className="rounded-lg border border-[#d8ded3] bg-white">
-          <div className="border-b border-[#e3e7df] px-4 py-3">
-            <h2 className="font-semibold">Lead Inbox</h2>
-            <p className="text-sm text-[#6f786c]">Qualified conversations</p>
-          </div>
-
-          <div className="divide-y divide-[#e3e7df]">
-            {leadRows.map((lead) => (
-              <article className="p-4" key={lead.name}>
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">{lead.name}</h3>
-                    <p className="text-sm text-[#6f786c]">
-                      {lead.intent} · {lead.area}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-[#dfe9f7] px-2.5 py-1 text-xs font-medium text-[#204f8a]">
-                    {lead.status}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md bg-[#f8faf6] p-3">
-                    <p className="text-xs text-[#6f786c]">Budget</p>
-                    <p className="font-semibold">{lead.budget}</p>
-                  </div>
-                  <div className="rounded-md bg-[#f8faf6] p-3">
-                    <p className="text-xs text-[#6f786c]">Score</p>
-                    <p className="font-semibold">{lead.score}</p>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
+        </aside>
+      </section>
     </main>
   );
 }

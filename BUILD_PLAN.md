@@ -85,68 +85,79 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 
 ### Build
 
-- [ ] Supabase migration structure.
-- [ ] Supabase SSR client setup for Next.js.
-- [ ] Auth pages and callbacks.
-- [ ] Protected dashboard shell.
-- [ ] Workspace creation for first user.
-- [ ] `workspaces` table with RLS.
-- [ ] `workspace_members` table with RLS.
-- [ ] `agent_profiles` table with RLS.
-- [ ] `bots` table with RLS.
-- [ ] `bot_channels` table with RLS.
-- [ ] `conversations` table.
-- [ ] `messages` table.
-- [ ] `leads` table.
-- [ ] Minimal agent profile form.
-- [ ] Minimal bot setup form.
-- [ ] Hosted public bot route, probably `/c/[slug]`.
-- [ ] Deterministic buyer lead flow.
-- [ ] Deterministic seller lead flow.
-- [ ] Lead scoring helper.
-- [ ] Conversation transcript storage.
-- [ ] Lead dashboard table.
-- [ ] Lead detail page with transcript.
-- [ ] Loading, empty, error, and success states.
-- [ ] Mobile layout pass.
+- [x] Supabase migration structure.
+- [x] Supabase SSR client setup for Next.js.
+- [x] Auth pages and callbacks.
+- [x] Protected dashboard shell.
+- [x] Workspace creation for first user.
+- [x] `workspaces` table with RLS.
+- [x] `workspace_members` table with RLS.
+- [x] `agent_profiles` table with RLS.
+- [x] `bots` table with RLS.
+- [x] `bot_channels` table with RLS.
+- [x] `conversations` table.
+- [x] `messages` table.
+- [x] `leads` table.
+- [x] Minimal agent profile form.
+- [x] Minimal bot setup form.
+- [x] Hosted public bot route at `/c/[slug]`.
+- [x] Deterministic buyer lead flow.
+- [x] Deterministic seller lead flow.
+- [x] Lead scoring helper.
+- [x] Conversation transcript storage.
+- [x] Lead dashboard table.
+- [x] Lead detail page with transcript.
+- [x] Loading, empty, error, and success states.
+- [x] Mobile-responsive layout pass in code.
+- [x] Decision: "default workspace exists" means onboarding creates the first workspace, profile, bot, and hosted channel after signup.
+- [x] Atomic onboarding RPC prevents partial workspace/profile data when bot slug creation fails.
+- [x] Duplicate hosted slug shows a clear UI error and suggested alternate slug.
+- [x] Incomplete chats without valid contact stay out of the lead inbox.
 
 ### Security
 
-- [ ] RLS enabled on all exposed workspace-owned tables.
-- [ ] Server-side authorization on every private query/mutation.
-- [ ] Public chat endpoint validates active bot/channel.
-- [ ] Public chat endpoint does not allow arbitrary workspace writes.
-- [ ] Basic public endpoint rate limit or abuse guard.
-- [ ] No service role key in browser bundle.
-- [ ] Cross-workspace access test.
+- [x] RLS enabled on all exposed workspace-owned tables.
+- [x] Server-side authorization on every private query/mutation.
+- [x] Public chat endpoint validates active bot/channel.
+- [x] Public chat endpoint does not allow arbitrary workspace writes.
+- [x] Basic public endpoint rate limit / abuse guard.
+- [x] No service role key in browser bundle static asset scan.
+- [x] Cross-workspace access smoke test.
+- [x] Automated RLS e2e check confirms User B cannot read User A leads.
 
 ### Automated Checks
 
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] Unit tests for lead scoring and deterministic flow state.
-- [ ] Basic integration tests for public chat route.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run build`.
+- [x] Unit tests for lead scoring and deterministic flow state.
+- [x] Basic integration smoke test for public chat route against Supabase.
+- [x] Supabase migration pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] Supabase RLS/policy verification query.
+- [x] Playwright config added.
+- [x] Playwright happy path covers auth, onboarding, hosted buyer flow, hosted seller flow, lead inbox/detail, invalid slug, duplicate slug, invalid contact, and RLS isolation.
 
 ### Manual Review
 
-- [ ] User can sign in.
-- [ ] User can create or complete workspace setup.
-- [ ] User can create an agent profile.
-- [ ] User can create a bot.
-- [ ] Hosted bot link loads.
-- [ ] Visitor completes buyer flow.
-- [ ] Visitor completes seller flow.
-- [ ] Dashboard shows captured lead.
-- [ ] Lead detail shows transcript.
-- [ ] Mobile review passes.
+- [x] Supabase Auth redirect allowlist confirmed in dashboard.
+- [x] User can sign in.
+- [x] User can create or complete workspace setup.
+- [x] User can create an agent profile.
+- [x] User can create a bot.
+- [x] Hosted bot link loads.
+- [x] Visitor completes buyer flow.
+- [x] Visitor completes seller flow.
+- [x] Dashboard shows captured lead.
+- [x] Lead detail shows transcript.
+- [x] Mobile review passes.
 
 Need from user before/during Phase 1:
 
-- [ ] Confirm preferred auth providers for v1: email magic link, Google, or both.
-- [ ] Provide sample agent profile details for testing.
-- [ ] Confirm whether hosted bot URL should be `/c/[slug]` or another pattern.
+- [x] Confirm preferred auth providers for v1: email/password plus Google. Magic link removed.
+- [x] Provide sample agent profile details for testing.
+- [x] Confirm hosted bot URL pattern: `/c/[slug]`.
 
-Phase 1 status: next.
+Phase 1 status: complete. Preview deployed, automated checks passed, browser buyer/seller flows verified, and manual review checklist accepted.
 
 ## Phase 2: Widget, QR, and Channel Tracking
 
@@ -338,16 +349,42 @@ Phase 10 status: pending.
 
 ## Current Next Step
 
-Start Phase 1.
+Start Phase 2: Widget, QR, and Channel Tracking.
 
 Recommended first implementation slice:
 
 ```text
-Supabase schema + auth + protected dashboard shell + workspace bootstrap
+channel source model + hosted/campaign channel management UI + source attribution on leads
 ```
 
 Then:
 
 ```text
-agent profile + bot config + hosted deterministic chat + lead inbox
+embeddable website widget loader + QR/campaign links + lead source reporting
+```
+
+
+## Auth Pivot Addendum (2026-06-10)
+
+Goal: replace fragile Supabase magic-link login with email/password plus Google OAuth.
+
+- [x] Remove magic-link login UI.
+- [x] Add email/password sign in and account creation.
+- [x] Add Google OAuth button in the login UI.
+- [x] Use Supabase server callback for Google OAuth code exchange.
+- [x] Configure Supabase password auth for Phase 1: signups enabled, email auto-confirm enabled, password minimum 8 characters.
+- [x] Create Google Cloud OAuth Web Client.
+- [x] Configure Supabase Google provider with Google Client ID and Client Secret.
+- [x] Add exact Google JavaScript origins for production/current review preview.
+- [x] Deploy preview and manually test email/password and Google sign-in.
+
+Required Google OAuth values:
+
+```txt
+Authorized redirect URI:
+https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback
+
+Authorized JavaScript origins:
+https://realestatechatbot-ai.vercel.app
+https://<current-preview>.vercel.app
 ```

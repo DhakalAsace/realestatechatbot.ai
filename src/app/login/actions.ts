@@ -2,38 +2,63 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getAppUrl } from "@/lib/env";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-const loginSchema = z.object({
+const authSchema = z.object({
   email: z.string().email(),
+  password: z.string().min(8),
   next: z.string().optional(),
+  mode: z.enum(["sign-in", "sign-up"]),
 });
 
-export async function requestMagicLink(formData: FormData) {
-  const parsed = loginSchema.safeParse({
+function safeNext(value: string | undefined) {
+  return value?.startsWith("/") ? value : "/dashboard";
+}
+
+function fail(reason: string): never {
+  redirect("/login?error=" + encodeURIComponent(reason));
+}
+
+export async function authenticateWithPassword(formData: FormData) {
+  const parsed = authSchema.safeParse({
     email: formData.get("email"),
+    password: formData.get("password"),
     next: formData.get("next") || "/dashboard",
+    mode: formData.get("mode"),
   });
 
   if (!parsed.success) {
-    redirect("/login?error=invalid-email");
+    fail("invalid-credentials");
   }
 
   const supabase = await createServerSupabaseClient();
-  const redirectTo = new URL("/auth/callback", getAppUrl());
-  redirectTo.searchParams.set("next", parsed.data.next ?? "/dashboard");
+  const next = safeNext(parsed.data.next);
 
-  const { error } = await supabase.auth.signInWithOtp({
+  if (parsed.data.mode === "sign-up") {
+    const { data, error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+
+    if (error) {
+      fail("signup-failed");
+    }
+
+    if (!data.session) {
+      redirect("/login?notice=confirm-email&email=" + encodeURIComponent(parsed.data.email));
+    }
+
+    redirect(next);
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
-    options: {
-      emailRedirectTo: redirectTo.toString(),
-    },
+    password: parsed.data.password,
   });
 
   if (error) {
-    redirect("/login?error=auth");
+    fail("signin-failed");
   }
 
-  redirect(`/login?sent=1&email=${encodeURIComponent(parsed.data.email)}`);
+  redirect(next);
 }

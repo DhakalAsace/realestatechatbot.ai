@@ -118,7 +118,11 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - Temporary end-to-end smoke test passed: disposable workspace/bot -> `POST /api/chat` buyer flow -> qualified lead -> 16 transcript messages -> cleanup.
 - Cross-workspace RLS smoke test passed: user A can read own workspace, cannot read workspace B, and cannot mutate workspace B bot.
 - Browser automation was not available in this thread/AWS environment, so visual/mobile review remains a manual review item.
-- Supabase Auth redirect allowlist still needs confirmation in the Supabase dashboard before magic links are reliable in production.
+
+- Auth pivot: magic-link UI was removed after repeated Supabase default-email/PKCE friction. Phase 1 now uses email/password plus planned Google OAuth through Supabase.
+- Supabase Auth config was updated for password auth: signups enabled, email auto-confirm enabled for Phase 1, and minimum password length set to 8. Revisit email confirmation/custom SMTP before public launch.
+- Google OAuth cannot be fully configured until a Google Cloud OAuth Web Client ID and Client Secret are created. Required Google redirect URI: `https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback`.
+- Browser/Chrome control was not callable in this Codex thread, so Google Cloud console setup remains a user/browser step unless a browser-control connector becomes available.
 
 ## Open Questions
 

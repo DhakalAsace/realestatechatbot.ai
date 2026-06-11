@@ -28,8 +28,15 @@ export function AuthCallbackClient() {
 
   useEffect(() => {
     let cancelled = false;
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const hashError = hashParams.get("error_code") || hashParams.get("error");
     const code = searchParams.get("code");
     const next = safeNext(searchParams.get("next"));
+
+    if (hashError) {
+      router.replace("/login?error=auth-callback");
+      return;
+    }
 
     if (!code) {
       router.replace("/login?error=auth-callback");
@@ -71,7 +78,7 @@ export function AuthCallbackClient() {
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8f3] px-5 text-[#162018]">
       <div className="rounded-lg border border-[#d9ded2] bg-white p-6 text-center shadow-sm">
         <h1 className="text-lg font-semibold">Signing you in</h1>
-        <p className="mt-2 text-sm text-[#5f685e]">One moment while we finish the secure email link.</p>
+        <p className="mt-2 text-sm text-[#5f685e]">One moment while we finish the secure sign-in.</p>
       </div>
     </main>
   );

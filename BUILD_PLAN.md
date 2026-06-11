@@ -355,3 +355,29 @@ Then:
 ```text
 agent profile + bot config + hosted deterministic chat + lead inbox
 ```
+
+
+## Auth Pivot Addendum (2026-06-10)
+
+Goal: replace fragile Supabase magic-link login with email/password plus Google OAuth.
+
+- [x] Remove magic-link login UI.
+- [x] Add email/password sign in and account creation.
+- [x] Add Google OAuth button in the login UI.
+- [x] Keep Supabase browser callback for OAuth code exchange.
+- [x] Configure Supabase password auth for Phase 1: signups enabled, email auto-confirm enabled, password minimum 8 characters.
+- [ ] Create Google Cloud OAuth Web Client.
+- [ ] Configure Supabase Google provider with Google Client ID and Client Secret.
+- [ ] Add exact Google JavaScript origins for production/current preview.
+- [ ] Deploy preview and manually test email/password and Google sign-in.
+
+Required Google OAuth values:
+
+```txt
+Authorized redirect URI:
+https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback
+
+Authorized JavaScript origins:
+https://realestatechatbot-ai.vercel.app
+https://<current-preview>.vercel.app
+```

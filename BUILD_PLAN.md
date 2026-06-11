@@ -364,7 +364,7 @@ Goal: replace fragile Supabase magic-link login with email/password plus Google 
 - [x] Remove magic-link login UI.
 - [x] Add email/password sign in and account creation.
 - [x] Add Google OAuth button in the login UI.
-- [x] Keep Supabase browser callback for OAuth code exchange.
+- [x] Use Supabase server callback for Google OAuth code exchange.
 - [x] Configure Supabase password auth for Phase 1: signups enabled, email auto-confirm enabled, password minimum 8 characters.
 - [ ] Create Google Cloud OAuth Web Client.
 - [ ] Configure Supabase Google provider with Google Client ID and Client Secret.

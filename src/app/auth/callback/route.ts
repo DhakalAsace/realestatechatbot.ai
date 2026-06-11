@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 function safeNext(value: string | null) {
   return value && value.startsWith("/") ? value : "/dashboard";
@@ -10,10 +11,19 @@ export async function GET(request: NextRequest) {
   const next = safeNext(url.searchParams.get("next"));
 
   if (code) {
-    const target = new URL("/auth/client-callback", url.origin);
-    target.searchParams.set("code", code);
-    target.searchParams.set("next", next);
-    return NextResponse.redirect(target);
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error) {
+      return NextResponse.redirect(new URL(next, url.origin));
+    }
+
+    console.error("Supabase auth callback exchange failed", {
+      code: error.code,
+      message: error.message,
+      name: error.name,
+      status: error.status,
+    });
   }
 
   return NextResponse.redirect(new URL("/login?error=auth-callback", url.origin));

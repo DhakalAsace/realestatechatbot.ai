@@ -18,7 +18,7 @@ export function GoogleButton() {
     setLoading(true);
 
     const next = safeNext(searchParams.get("next"));
-    const redirectTo = new URL("/auth/client-callback", window.location.origin);
+    const redirectTo = new URL("/auth/callback", window.location.origin);
     redirectTo.searchParams.set("next", next);
 
     const supabase = createBrowserSupabaseClient();

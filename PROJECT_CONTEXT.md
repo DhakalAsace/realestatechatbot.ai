@@ -121,7 +121,7 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 
 - Auth pivot: magic-link UI was removed after repeated Supabase default-email/PKCE friction. Phase 1 now uses email/password plus planned Google OAuth through Supabase.
 - Supabase Auth config was updated for password auth: signups enabled, email auto-confirm enabled for Phase 1, and minimum password length set to 8. Revisit email confirmation/custom SMTP before public launch.
-- Google OAuth cannot be fully configured until a Google Cloud OAuth Web Client ID and Client Secret are created. Required Google redirect URI: `https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback`.
+- Google OAuth uses the server callback `/auth/callback`; Supabase OAuth provider is configured with a Google Cloud web client. Required Google redirect URI: `https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback`.
 - Browser/Chrome control was not callable in this Codex thread, so Google Cloud console setup remains a user/browser step unless a browser-control connector becomes available.
 
 ## Open Questions

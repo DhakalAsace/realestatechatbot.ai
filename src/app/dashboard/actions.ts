@@ -33,7 +33,7 @@ const leadStatusSchema = z.object({
 });
 
 export async function completeOnboarding(formData: FormData) {
-  const user = await requireUser();
+  await requireUser();
   const parsed = onboardingSchema.safeParse({
     displayName: formData.get("displayName"),
     brokerageName: formData.get("brokerageName"),
@@ -56,69 +56,22 @@ export async function completeOnboarding(formData: FormData) {
     .map((area) => area.trim())
     .filter(Boolean);
 
-  const { data: workspace, error: workspaceError } = await supabase
-    .from("workspaces")
-    .insert({
-      name: parsed.data.brokerageName,
-      slug: workspaceSlug,
-      created_by: user.id,
-    })
-    .select("id")
-    .single();
-
-  if (workspaceError || !workspace) redirect("/dashboard/onboarding?error=workspace");
-
-  const { error: memberError } = await supabase.from("workspace_members").insert({
-    workspace_id: workspace.id,
-    user_id: user.id,
-    role: "owner",
+  const { error } = await supabase.rpc("complete_workspace_onboarding", {
+    p_workspace_name: parsed.data.brokerageName,
+    p_workspace_slug: workspaceSlug,
+    p_display_name: parsed.data.displayName,
+    p_brokerage_name: parsed.data.brokerageName,
+    p_email: parsed.data.email,
+    p_phone: parsed.data.phone,
+    p_city: parsed.data.city,
+    p_service_areas: serviceAreas,
+    p_bot_slug: botSlug,
+    p_brand_color: "#163f2f",
   });
 
-  if (memberError) redirect("/dashboard/onboarding?error=member");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("agent_profiles")
-    .insert({
-      workspace_id: workspace.id,
-      user_id: user.id,
-      display_name: parsed.data.displayName,
-      brokerage_name: parsed.data.brokerageName,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      city: parsed.data.city,
-      service_areas: serviceAreas,
-      brand_color: "#163f2f",
-    })
-    .select("id")
-    .single();
-
-  if (profileError || !profile) redirect("/dashboard/onboarding?error=profile");
-
-  const { data: bot, error: botError } = await supabase
-    .from("bots")
-    .insert({
-      workspace_id: workspace.id,
-      agent_profile_id: profile.id,
-      name: `${parsed.data.displayName} lead assistant`,
-      slug: botSlug,
-      status: "active",
-      greeting: `Hi, I am ${parsed.data.displayName}'s assistant. Are you looking to buy or sell?`,
-      fallback_message: "I can help with buying, selling, valuations, and showing requests. Are you looking to buy or sell?",
-      theme: { brandColor: "#163f2f" },
-    })
-    .select("id")
-    .single();
-
-  if (botError || !bot) redirect("/dashboard/onboarding?error=bot");
-
-  const { error: channelError } = await supabase.from("bot_channels").insert({
-    workspace_id: workspace.id,
-    bot_id: bot.id,
-    type: "hosted_link",
-    status: "active",
-  });
-
-  if (channelError) redirect("/dashboard/onboarding?error=channel");
+  if (error) {
+    redirect(onboardingErrorUrl(error, botSlug));
+  }
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
@@ -151,7 +104,13 @@ export async function updateBot(formData: FormData) {
     })
     .eq("id", parsed.data.botId);
 
-  if (error) redirect(`/dashboard/bots/${parsed.data.botId}?error=update`);
+  if (error) {
+    const errorCode = "code" in error ? error.code : undefined;
+    const errorMessage = error.message ?? "";
+    const reason = errorCode === "23505" || errorMessage.includes("bots_slug_key") ? "duplicate-slug" : "update";
+
+    redirect(`/dashboard/bots/${parsed.data.botId}?error=${reason}`);
+  }
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/bots/${parsed.data.botId}`);
@@ -184,4 +143,23 @@ export async function signOut() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+function onboardingErrorUrl(error: { message?: string; code?: string }, botSlug: string) {
+  const message = error.message ?? "";
+
+  if (message.includes("duplicate_bot_slug") || message.includes("bots_slug_key")) {
+    const suggestedSlug = withShortSuffix(botSlug);
+    return `/dashboard/onboarding?error=duplicate-slug&botSlug=${encodeURIComponent(botSlug)}&suggestedSlug=${encodeURIComponent(suggestedSlug)}`;
+  }
+
+  if (message.includes("already_onboarded")) {
+    return "/dashboard";
+  }
+
+  if (message.includes("invalid") || message.includes("missing_required_fields")) {
+    return "/dashboard/onboarding?error=validation";
+  }
+
+  return "/dashboard/onboarding?error=setup";
 }

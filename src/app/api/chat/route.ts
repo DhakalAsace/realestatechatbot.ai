@@ -138,14 +138,16 @@ export async function POST(request: Request) {
     .eq("id", conversation.id)
     .eq("bot_id", bot.id);
 
-  await upsertLead({
-    bot,
-    conversationId: conversation.id,
-    lead: result.lead,
-    score: result.score,
-    status: result.status,
-    temperature: result.temperature,
-  });
+  if (result.lead.email || result.lead.phone) {
+    await upsertLead({
+      bot,
+      conversationId: conversation.id,
+      lead: result.lead,
+      score: result.score,
+      status: result.status,
+      temperature: result.temperature,
+    });
+  }
 
   return NextResponse.json({
     sessionId: session.sessionId,

@@ -16,6 +16,7 @@ export default async function BotPage({ params, searchParams }: BotPageProps) {
   if (!bot) notFound();
 
   const brandColor = bot.theme?.brandColor ?? "#163f2f";
+  const errorMessage = getBotErrorMessage(query.error);
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-6">
@@ -30,7 +31,7 @@ export default async function BotPage({ params, searchParams }: BotPageProps) {
       </div>
 
       {query.saved ? <div className="mb-4 rounded-lg border border-[#bcd7c8] bg-[#edf7f1] p-4 text-sm text-[#173f2f]">Bot saved.</div> : null}
-      {query.error ? <div className="mb-4 rounded-lg border border-[#f0c0aa] bg-[#fff1eb] p-4 text-sm text-[#8a3518]">Could not save bot settings.</div> : null}
+      {errorMessage ? <div className="mb-4 rounded-lg border border-[#f0c0aa] bg-[#fff1eb] p-4 text-sm text-[#8a3518]">{errorMessage}</div> : null}
 
       <form action={updateBot} className="grid gap-4 rounded-lg border border-[#d9ded2] bg-white p-5 md:grid-cols-2">
         <input name="botId" type="hidden" value={bot.id} />
@@ -62,6 +63,13 @@ export default async function BotPage({ params, searchParams }: BotPageProps) {
       </form>
     </main>
   );
+}
+
+function getBotErrorMessage(error?: string) {
+  if (!error) return null;
+  if (error === "duplicate-slug") return "That hosted slug is already taken. Choose another slug and save again.";
+
+  return "Could not save bot settings.";
 }
 
 function Field({ label, name, defaultValue, type = "text" }: { label: string; name: string; defaultValue: string; type?: string }) {

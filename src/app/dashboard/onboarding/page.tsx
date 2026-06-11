@@ -11,6 +11,9 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
   if (workspace) redirect("/dashboard");
 
+  const errorMessage = getOnboardingErrorMessage(params);
+  const defaultBotSlug = params.suggestedSlug ?? "sarah-patel";
+
   return (
     <main className="mx-auto max-w-4xl px-5 py-6">
       <div className="rounded-lg border border-[#d9ded2] bg-white p-5 md:p-6">
@@ -20,9 +23,9 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           These defaults create the Sarah Patel hosted bot at /c/sarah-patel for Phase 1 review.
         </p>
 
-        {params.error ? (
+        {errorMessage ? (
           <div className="mt-5 rounded-lg border border-[#f0c0aa] bg-[#fff1eb] p-4 text-sm text-[#8a3518]">
-            Setup stopped at: {params.error}. Check Supabase env and migrations, then retry.
+            {errorMessage}
           </div>
         ) : null}
 
@@ -32,7 +35,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           <Field label="Email" name="email" defaultValue="sarah.patel@example.com" type="email" />
           <Field label="Phone" name="phone" defaultValue="+1 204 555 0134" />
           <Field label="City" name="city" defaultValue="Winnipeg" />
-          <Field label="Hosted slug" name="botSlug" defaultValue="sarah-patel" />
+          <Field label="Hosted slug" name="botSlug" defaultValue={defaultBotSlug} />
           <label className="md:col-span-2">
             <span className="mb-1 block text-sm font-medium">Service areas</span>
             <input className="h-11 w-full rounded-md border border-[#cdd5c8] px-3 outline-none focus:border-[#2861a8]" name="serviceAreas" defaultValue="Winnipeg, River Heights, St. Vital" required />
@@ -46,6 +49,23 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
       </div>
     </main>
   );
+}
+
+function getOnboardingErrorMessage(params: Record<string, string | undefined>) {
+  if (!params.error) return null;
+
+  if (params.error === "duplicate-slug") {
+    const slug = params.botSlug ? `/${params.botSlug}` : "that hosted slug";
+    const suggestion = params.suggestedSlug ? ` Try ${params.suggestedSlug} instead.` : "";
+
+    return `${slug} is already taken.${suggestion}`;
+  }
+
+  if (params.error === "validation") {
+    return "Some setup details were invalid. Check the fields and try again.";
+  }
+
+  return "Setup could not complete. Check the Supabase connection and try again.";
 }
 
 function Field({ label, name, defaultValue, type = "text" }: { label: string; name: string; defaultValue: string; type?: string }) {

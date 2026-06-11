@@ -109,6 +109,10 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 - [x] Lead detail page with transcript.
 - [x] Loading, empty, error, and success states.
 - [x] Mobile-responsive layout pass in code.
+- [x] Decision: "default workspace exists" means onboarding creates the first workspace, profile, bot, and hosted channel after signup.
+- [x] Atomic onboarding RPC prevents partial workspace/profile data when bot slug creation fails.
+- [x] Duplicate hosted slug shows a clear UI error and suggested alternate slug.
+- [x] Incomplete chats without valid contact stay out of the lead inbox.
 
 ### Security
 
@@ -119,6 +123,7 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 - [x] Basic public endpoint rate limit / abuse guard.
 - [x] No service role key in browser bundle static asset scan.
 - [x] Cross-workspace access smoke test.
+- [x] Automated RLS e2e check confirms User B cannot read User A leads.
 
 ### Automated Checks
 
@@ -129,6 +134,8 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 - [x] Basic integration smoke test for public chat route against Supabase.
 - [x] Supabase migration pushed to project `dwvkmxtumugvgytmlbsk`.
 - [x] Supabase RLS/policy verification query.
+- [x] Playwright config added.
+- [x] Playwright happy path covers auth, onboarding, hosted buyer flow, hosted seller flow, lead inbox/detail, invalid slug, duplicate slug, invalid contact, and RLS isolation.
 
 ### Manual Review
 
@@ -138,19 +145,19 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 - [x] User can create an agent profile.
 - [x] User can create a bot.
 - [x] Hosted bot link loads.
-- [ ] Visitor completes buyer flow.
-- [ ] Visitor completes seller flow.
-- [ ] Dashboard shows captured lead.
-- [ ] Lead detail shows transcript.
-- [ ] Mobile review passes.
+- [x] Visitor completes buyer flow.
+- [x] Visitor completes seller flow.
+- [x] Dashboard shows captured lead.
+- [x] Lead detail shows transcript.
+- [x] Mobile review passes.
 
 Need from user before/during Phase 1:
 
-- [x] Confirm preferred auth providers for v1: email magic link.
+- [x] Confirm preferred auth providers for v1: email/password plus Google. Magic link removed.
 - [x] Provide sample agent profile details for testing.
 - [x] Confirm hosted bot URL pattern: `/c/[slug]`.
 
-Phase 1 status: ready for deployment and manual review.
+Phase 1 status: complete. Preview deployed, automated checks passed, browser buyer/seller flows verified, and manual review checklist accepted.
 
 ## Phase 2: Widget, QR, and Channel Tracking
 
@@ -342,18 +349,18 @@ Phase 10 status: pending.
 
 ## Current Next Step
 
-Start Phase 1.
+Start Phase 2: Widget, QR, and Channel Tracking.
 
 Recommended first implementation slice:
 
 ```text
-Supabase schema + auth + protected dashboard shell + workspace bootstrap
+channel source model + hosted/campaign channel management UI + source attribution on leads
 ```
 
 Then:
 
 ```text
-agent profile + bot config + hosted deterministic chat + lead inbox
+embeddable website widget loader + QR/campaign links + lead source reporting
 ```
 
 
@@ -366,10 +373,10 @@ Goal: replace fragile Supabase magic-link login with email/password plus Google 
 - [x] Add Google OAuth button in the login UI.
 - [x] Use Supabase server callback for Google OAuth code exchange.
 - [x] Configure Supabase password auth for Phase 1: signups enabled, email auto-confirm enabled, password minimum 8 characters.
-- [ ] Create Google Cloud OAuth Web Client.
-- [ ] Configure Supabase Google provider with Google Client ID and Client Secret.
-- [ ] Add exact Google JavaScript origins for production/current preview.
-- [ ] Deploy preview and manually test email/password and Google sign-in.
+- [x] Create Google Cloud OAuth Web Client.
+- [x] Configure Supabase Google provider with Google Client ID and Client Secret.
+- [x] Add exact Google JavaScript origins for production/current review preview.
+- [x] Deploy preview and manually test email/password and Google sign-in.
 
 Required Google OAuth values:
 

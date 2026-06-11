@@ -11,12 +11,12 @@
 
 ## Current Goal
 
-Phase 0 foundation is complete. The active planning file is `BUILD_PLAN.md`.
+Phase 0 foundation and Phase 1 hosted chatbot loop are complete. The active planning file is `BUILD_PLAN.md`.
 
-Next, build Phase 1:
+Next, build Phase 2:
 
 ```text
-agent creates a bot -> visitor completes buyer/seller chat -> lead appears in dashboard with transcript and score
+one bot can be shared through hosted links, website widgets, QR codes, social/campaign links -> source is tracked on conversations/leads
 ```
 
 ## Development Rules
@@ -124,6 +124,18 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 - Google OAuth uses the server callback `/auth/callback`; Supabase OAuth provider is configured with a Google Cloud web client. Required Google redirect URI: `https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback`.
 - Google Cloud OAuth was configured and verified through Chrome control under `dhakalasace777@gmail.com`. The OAuth client includes the production origin, the latest Vercel preview origin, and Supabase callback redirect URI.
 - Supabase migration `202606110001_allow_workspace_creator_bootstrap_select.sql` fixes first-workspace bootstrap by allowing authenticated workspace creators to read the workspace row before owner membership exists. Disposable RLS onboarding smoke test passed, and the real `dhakalasace777@gmail.com` onboarding created the Northline Realty / Sarah Patel sample bot.
+- Phase 1 default workspace decision: signup alone does not create workspace data. Onboarding creates the first workspace, owner membership, agent profile, active bot, and hosted channel.
+- Supabase migration `202606110002_atomic_onboarding_rpc.sql` adds `public.complete_workspace_onboarding(...)` so onboarding is transactional. Duplicate bot slug now rolls back instead of leaving partial workspace/profile rows.
+- Duplicate hosted slug handling now shows a clear onboarding/settings UI error and suggests an alternate slug during onboarding.
+- Public chat conversations/messages can exist before contact capture, but lead rows are only created after a valid email or phone is captured. This keeps invalid-contact experiments out of the lead inbox.
+- Playwright Phase 1 e2e coverage was added. It verifies logged-out dashboard protection, email/password account setup, onboarding-created default workspace/bot, public buyer flow, public seller flow, lead inbox/detail transcript, score/status, invalid slug 404, invalid contact no-lead behavior, duplicate slug rollback, and RLS isolation.
+- `npm run test:e2e` passed on AWS with 3 Chromium tests.
+- Verification hardening preview deployed on Vercel: `https://realestatechatbot-r8ro5equ5-dhakalasaces-projects.vercel.app`.
+- Vercel inspect status: Ready. Protected-preview `vercel curl` verified `/c/sarah-patel` renders the hosted Sarah Patel assistant. Error log scan for the preview returned no errors.
+- Phase 1 final re-verification passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, and `npm run build`.
+- Browser-use verification through an SSH tunnel to the AWS production server completed buyer and seller flows against `/c/sarah-patel`; Supabase confirmed qualified/hot leads with transcript messages and score 100. Temporary browser test records were deleted.
+- Mobile smoke review passed at a 390px viewport for the hosted Sarah Patel bot: assistant content, buy button, and input rendered with no console errors.
+- Phase 1 is accepted as complete. Next phase is Phase 2: Widget, QR, and Channel Tracking.
 
 ## Open Questions
 
@@ -132,4 +144,4 @@ agent creates a bot -> visitor completes buyer/seller chat -> lead appears in da
 
 ## Manual Test Log
 
-Phase 1 automated checks passed on AWS. Google sign-in was verified end-to-end on the latest preview and the Sarah Patel hosted bot page loads at `/c/sarah-patel`. Buyer/seller lead-capture manual review is still pending.
+Phase 1 automated checks passed on AWS. Google sign-in was verified end-to-end on a review preview and the Sarah Patel hosted bot page loads at `/c/sarah-patel`. Browser buyer/seller lead-capture review passed, dashboard/lead transcript behavior passed through Playwright and browser+DB verification, and mobile hosted-bot smoke passed. Phase 1 is complete.

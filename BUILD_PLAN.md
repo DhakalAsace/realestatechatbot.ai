@@ -579,24 +579,46 @@ Phase 8 status: implementation complete by automated checks, browser verificatio
 
 Goal: build useful SEO/product pages after the product is real.
 
-- [ ] Polish homepage as canonical money page.
-- [ ] Add metadata and canonical tags.
-- [ ] Add OG image strategy.
-- [ ] Add SoftwareApplication schema.
-- [ ] Add FAQ schema where appropriate.
-- [ ] `/tools/real-estate-chatbot-template-generator`
-- [ ] `/examples/real-estate-chatbot-examples`
-- [ ] `/guides/how-to-build-a-real-estate-chatbot`
-- [ ] `/guides/real-estate-lead-capture`
-- [ ] `/use-cases/home-valuation-chatbot`
-- [ ] `/use-cases/open-house-chatbot`
-- [ ] `/use-cases/property-recommendation-chatbot`
-- [ ] `/best-real-estate-chatbots`
-- [ ] Sitemap and robots.
-- [ ] No duplicate synonym pages.
-- [ ] User reviews SEO pages and product CTAs.
+- [x] Polish homepage as canonical money page.
+- [x] Add metadata and canonical tags.
+- [x] Add OG image strategy.
+- [x] Add SoftwareApplication schema.
+- [x] Add FAQ schema where appropriate.
+- [x] `/tools/real-estate-chatbot-template-generator`.
+- [x] `/examples/real-estate-chatbot-examples`.
+- [x] `/guides/how-to-build-a-real-estate-chatbot`.
+- [x] `/guides/real-estate-lead-capture`.
+- [x] `/use-cases/home-valuation-chatbot`.
+- [x] `/use-cases/open-house-chatbot`.
+- [x] `/use-cases/property-recommendation-chatbot`.
+- [x] `/best-real-estate-chatbots`.
+- [x] Sitemap and robots.
+- [x] No duplicate synonym pages.
+- [x] User review gate replaced by autonomous/browser/sub-agent review per current operating mode.
 
-Phase 9 status: pending.
+Phase 9 verification evidence on AWS, 2026-06-16:
+
+- [x] Homepage now owns the main money-page cluster for "AI real estate chatbot" and focuses on lead capture, channel attribution, appointments, follow-ups, team routing, and billing-aware limits.
+- [x] Supporting pages target distinct intents: interactive tool, examples, build guide, lead-capture guide, seller valuation, open house, property recommendation, and comparison framework.
+- [x] Root layout adds metadata base, canonical defaults, Open Graph metadata, Twitter metadata, and title template.
+- [x] Individual SEO pages use page-specific metadata and canonical URLs.
+- [x] `src/app/opengraph-image.tsx` generates a product-preview OG image.
+- [x] Homepage emits `SoftwareApplication`, `WebPage`, and `FAQPage` JSON-LD.
+- [x] Supporting SEO pages emit `WebPage` and `FAQPage` JSON-LD.
+- [x] `src/app/sitemap.ts` includes homepage plus all Phase 9 SEO pages and excludes customer bot pages.
+- [x] `src/app/robots.ts` allows public marketing pages and disallows private/app utility routes.
+- [x] Existing `/c/[slug]` and `/embed/[channelKey]` noindex metadata remains in place for customer bot/embed surfaces.
+- [x] Unit coverage added in `src/lib/marketing.test.ts` for required routes, unique intents, FAQ schema, and JSON-LD escaping.
+- [x] Playwright coverage added in `tests/e2e/phase9-seo.spec.ts` for homepage metadata/schema/CTA, all required SEO routes, template generator behavior, sitemap/robots, and hosted bot noindex behavior.
+- [x] Sub-agent SEO/product audits were reconciled against AWS source of truth; sub-agents could not directly mount `/home/ec2-user/realestatechatbot.ai`, so main-agent SSH inspection is authoritative.
+- [x] Targeted checks passed before full gate: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`, and `npx playwright test tests/e2e/phase9-seo.spec.ts`.
+- [x] Full regression passed on AWS after closeout hardening: `npm run lint`, `npm run typecheck`, `npm run test` (13 files, 63 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (14 Chromium tests).
+- [x] Playwright e2e now builds and runs against production `next start` instead of `next dev` to avoid Turbopack dev-server instability during full regression.
+- [x] Fresh Phase 9 preview deployed: `https://realestatechatbot-gbomiktfq-dhakalasaces-projects.vercel.app`.
+- [x] Vercel inspect status: Ready; authenticated `vercel curl` verified homepage/subpage metadata, robots, sitemap, OG image PNG headers, and `/c/sarah-patel` noindex behavior; recent error-log scan returned no logs.
+- [x] In-app Browser attempted the protected preview and hit Vercel login. Authenticated Vercel CLI live checks plus Playwright browser tests are authoritative for this protected deployment.
+
+Phase 9 status: complete by autonomous/browser/sub-agent review on AWS. Production promotion is not done.
 
 ## Phase 10: Hardening and Launch Readiness
 
@@ -624,12 +646,12 @@ Phase 10 status: pending.
 
 ## Current Next Step
 
-Phase 8 implementation is complete inside the planned entitlement-first scope. Next is Stripe activation planning only after test-mode credentials, price IDs, and pricing decisions are available; otherwise proceed to Phase 9 planning.
+Proceed to Phase 10 launch-hardening unless Stripe activation inputs are supplied first. Keep production promotion, real payments, secret rotation, destructive external actions, and irreversible account changes behind explicit approval.
 
 Current engineering status:
 
 ```text
-Phases 0-8 are complete by automated, browser, Vercel preview, and sub-agent review. Real Stripe checkout/portal/payment activation remains gated on Stripe test credentials and price IDs.
+Phases 0-9 are complete. Phase 10 hardening and launch readiness is next; real Stripe payment activation still needs credentials and price decisions.
 ```
 
 Human gate:

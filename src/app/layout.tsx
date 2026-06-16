@@ -1,33 +1,23 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { absoluteUrl, siteConfig } from "@/lib/marketing";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "RealEstateChatbot.ai",
-  description: "AI real estate lead conversion assistant for hosted links, website widgets, QR codes, and social traffic.",
+  metadataBase: new URL(siteConfig.baseUrl),
+  title: { default: "RealEstateChatbot.ai | AI Real Estate Chatbot for Lead Capture", template: "%s | RealEstateChatbot.ai" },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  creator: siteConfig.name,
+  publisher: siteConfig.name,
+  alternates: { canonical: absoluteUrl("/") },
+  openGraph: { type: "website", url: absoluteUrl("/"), title: "RealEstateChatbot.ai | AI Real Estate Chatbot for Lead Capture", description: siteConfig.description, siteName: siteConfig.name, images: [{ url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: siteConfig.name + " product preview" }] },
+  twitter: { card: "summary_large_image", title: "RealEstateChatbot.ai | AI Real Estate Chatbot for Lead Capture", description: siteConfig.description, images: [absoluteUrl("/opengraph-image")] },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="en" className={geistSans.variable + " " + geistMono.variable + " h-full antialiased"}><body className="min-h-full flex flex-col">{children}</body></html>;
 }

@@ -37,6 +37,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/team">
               Team
             </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/billing">
+              Billing
+            </Link>
             <form action={signOut}>
               <button className="rounded-md bg-[#162018] px-3 py-2 font-medium text-white hover:bg-[#2d392f]" type="submit">
                 Sign out

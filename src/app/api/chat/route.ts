@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { AppointmentRequest } from "@/lib/appointments";
+import { recordUsageEvent } from "@/lib/billing/entitlements";
 import { runAiChatTurn, type AiTurnMetadata } from "@/lib/chat/ai";
 import { runChatTurn } from "@/lib/chat/flow";
 import { summarizeLead } from "@/lib/chat/scoring";
@@ -145,6 +146,22 @@ export async function POST(request: Request) {
   }
 
   const conversation = session.conversation;
+  const usageReservation = await recordUsageEvent(admin, {
+    workspaceId: bot.workspace_id,
+    eventType: "chat_turn",
+    sourceType: "conversation",
+    sourceId: conversation.id,
+    idempotencyKey: `chat_turn:${conversation.id}:${Date.now()}:${hashValue(parsed.data.message).slice(0, 16)}`,
+    metadata: { botId: bot.id, channelId: channel.id, channelType: channel.type },
+  });
+
+  if (!usageReservation.ok) {
+    return NextResponse.json({ error: "Could not save chat usage. Please try again." }, { status: 500 });
+  }
+  if (!usageReservation.allowed) {
+    return NextResponse.json({ error: "This assistant is temporarily unavailable. Please try again later." }, { status: 402 });
+  }
+
   const deterministicResult = runChatTurn(conversation.current_state, parsed.data.message);
   const retrieval = await loadRetrievalContext({
     admin,
@@ -152,8 +169,24 @@ export async function POST(request: Request) {
     visitorMessage: parsed.data.message,
     lead: deterministicResult.lead,
   });
+  let aiBot: BotRecord = bot;
+  if (shouldMeterAiTurn(bot)) {
+    const aiUsage = await recordUsageEvent(admin, {
+      workspaceId: bot.workspace_id,
+      eventType: "ai_message",
+      sourceType: "conversation",
+      sourceId: conversation.id,
+      idempotencyKey: `ai_message:${conversation.id}:${Date.now()}:${hashValue(parsed.data.message).slice(0, 16)}`,
+      metadata: { botId: bot.id, channelId: channel.id },
+    });
+    if (!aiUsage.ok) return NextResponse.json({ error: "Could not save chat usage. Please try again." }, { status: 500 });
+    if (!aiUsage.allowed) {
+      aiBot = { ...bot, ai_enabled: false };
+    }
+  }
+
   const turn = await runAiChatTurn({
-    bot,
+    bot: aiBot,
     previousState: conversation.current_state,
     visitorMessage: parsed.data.message,
     deterministicResult,
@@ -211,6 +244,10 @@ export async function POST(request: Request) {
       notificationStatus: notification?.status,
     } : undefined,
   });
+}
+
+function shouldMeterAiTurn(bot: BotRecord) {
+  return Boolean(bot.ai_enabled && process.env.OPENAI_API_KEY && process.env.AI_CHAT_DISABLE_MODEL !== "1");
 }
 
 async function safeJson(request: Request) {

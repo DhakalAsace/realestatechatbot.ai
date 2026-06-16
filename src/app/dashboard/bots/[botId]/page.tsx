@@ -94,6 +94,7 @@ function getBotErrorMessage(error?: string) {
   if (!error) return null;
   if (error === "duplicate-slug") return "That hosted slug is already taken. Choose another slug and save again.";
   if (error === "calendar") return "Could not save the calendar URL. Use a valid http or https link.";
+  if (error === "limit") return "This workspace has reached the active bot limit for its plan.";
 
   return "Could not save bot settings.";
 }

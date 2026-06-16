@@ -31,6 +31,7 @@ const errorText: Record<string, string> = {
   "last-owner": "A workspace must keep at least one owner.",
   "owner-permission": "Only owners can create, demote, or remove owner members.",
   profile: "Profile could not be saved. Check the fields and try again.",
+  limit: "This workspace has reached the team member limit for its plan.",
 };
 
 export default async function TeamPage({ searchParams }: TeamPageProps) {

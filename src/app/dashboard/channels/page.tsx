@@ -18,6 +18,7 @@ const errorText: Record<string, string> = {
   create: "The channel could not be created.",
   update: "The channel could not be updated.",
   origins: "Website widget channels need at least one allowed origin.",
+  limit: "This workspace has reached the channel limit for its plan.",
 };
 const fieldClass = "h-11 w-full rounded-md border border-[#cbd5c7] bg-white px-3 outline-none focus:border-[#2861a8]";
 const textareaClass = "w-full rounded-md border border-[#cbd5c7] bg-white px-3 outline-none focus:border-[#2861a8]";

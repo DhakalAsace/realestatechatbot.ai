@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 const checkpoints = [
-  "Email/password and Google sign-in",
-  "Hosted, campaign, QR, social, and website widget channels",
-  "Controlled property and knowledge library with RLS",
-  "Appointment, showing, and valuation requests after lead capture",
-  "Team workspace roles, routing, team inbox filters, and audit events",
-  "Explicit email consent before automated follow-up",
-  "Unsubscribe, scheduler, and sent/failed/skipped delivery logs",
+  "Billing dashboard with plan and usage meters",
+  "Stripe test-mode Checkout and Portal fail safely until credentials are configured",
+  "Signed Stripe webhook verification with retry-safe event handling",
+  "Atomic Supabase usage reservations for chat, AI, and follow-up emails",
+  "Database-enforced limits for bots, channels, team seats, properties, and knowledge",
+  "RLS-protected billing, subscription, and usage data",
+  "Full Phase 1-8 browser regression suite",
 ];
 
 type HomeProps = {
@@ -31,7 +31,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <header className="border-b border-[#d9ded2] bg-white/90">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#657064]">Phase 7 review</p>
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#657064]">Phase 8 review</p>
             <h1 className="text-xl font-semibold">RealEstateChatbot.ai</h1>
           </div>
           <nav className="flex flex-wrap gap-2 text-sm">
@@ -52,20 +52,20 @@ export default async function Home({ searchParams }: HomeProps) {
             Turn real estate traffic into qualified appointments 24/7.
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[#657064]">
-            Phase 7 adds safe email follow-up automation: default buyer, seller valuation, and showing workflows, dashboard controls, explicit consent tracking, one-click unsubscribe, a secured scheduler endpoint, and delivery logs.
+            Phase 8 adds the billing spine: workspace plans, usage meters, server-side entitlements, Stripe test-mode Checkout and Portal hooks, signed webhooks, and fail-closed limits before paid actions.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link className="rounded-md bg-[#173f2f] px-5 py-3 text-sm font-semibold text-white" href="/login">
               Open dashboard
             </Link>
-            <Link className="rounded-md border border-[#cbd5c7] bg-white px-5 py-3 text-sm font-semibold" href="/dashboard/follow-ups">
-              Manage follow-ups
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-5 py-3 text-sm font-semibold" href="/dashboard/billing">
+              Review billing
             </Link>
           </div>
         </div>
 
         <aside className="rounded-lg border border-[#d9ded2] bg-white p-5">
-          <h3 className="font-semibold">Phase 7 review checklist</h3>
+          <h3 className="font-semibold">Phase 8 review checklist</h3>
           <div className="mt-4 space-y-3">
             {checkpoints.map((item) => (
               <div className="flex gap-3 rounded-md bg-[#f7f9f4] p-3" key={item}>

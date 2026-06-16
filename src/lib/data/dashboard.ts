@@ -3,6 +3,8 @@ import "server-only";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import type { ChannelStatus, ChannelType } from "@/lib/channels";
+import { getWorkspaceBillingSummary, type BillingSummary } from "@/lib/billing/entitlements";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type WorkspaceRow = {
   id: string;
@@ -279,6 +281,50 @@ export type LeadFollowUpStateRow = {
   updated_at: string;
 };
 
+export type BillingCustomerRow = {
+  id: string;
+  workspace_id: string;
+  stripe_customer_id: string;
+  email: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SubscriptionRow = {
+  id: string;
+  workspace_id: string;
+  billing_customer_id: string | null;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  stripe_price_id: string | null;
+  stripe_product_id: string | null;
+  plan_key: "free" | "starter" | "pro";
+  status: "incomplete" | "incomplete_expired" | "trialing" | "active" | "past_due" | "canceled" | "unpaid" | "paused" | "inactive";
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  canceled_at: string | null;
+  trial_end: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UsageEventRow = {
+  id: string;
+  workspace_id: string;
+  event_type: string;
+  quantity: number;
+  source_type: string | null;
+  source_id: string | null;
+  idempotency_key: string;
+  occurred_at: string;
+  period_start: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
 export async function getDashboardContext() {
   const user = await requireUser();
   const supabase = await createServerSupabaseClient();
@@ -496,6 +542,45 @@ export async function getFollowUpsContext() {
     leadEmailPreferences: (leadEmailPreferences ?? []) as LeadEmailPreferenceRow[],
     followUpStates: (followUpStates ?? []) as LeadFollowUpStateRow[],
     followUpEvents: (followUpEvents ?? []) as NotificationEventRow[],
+  };
+}
+
+
+export async function getBillingContext() {
+  const context = await getDashboardContext();
+
+  if (!context.workspace) {
+    return { ...context, billingSummary: null as BillingSummary | null, billingCustomer: null, subscriptions: [], usageEvents: [] };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const admin = getSupabaseAdminClient();
+  const [{ data: billingCustomer }, { data: subscriptions }, { data: usageEvents }, billingSummary] = await Promise.all([
+    supabase
+      .from("billing_customers")
+      .select("id, workspace_id, stripe_customer_id, email, metadata, created_at, updated_at")
+      .eq("workspace_id", context.workspace.id)
+      .maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("id, workspace_id, billing_customer_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_product_id, plan_key, status, current_period_start, current_period_end, cancel_at_period_end, canceled_at, trial_end, metadata, created_at, updated_at")
+      .eq("workspace_id", context.workspace.id)
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("usage_events")
+      .select("id, workspace_id, event_type, quantity, source_type, source_id, idempotency_key, occurred_at, period_start, metadata, created_at")
+      .eq("workspace_id", context.workspace.id)
+      .order("occurred_at", { ascending: false })
+      .limit(50),
+    getWorkspaceBillingSummary(admin, context.workspace.id),
+  ]);
+
+  return {
+    ...context,
+    billingSummary,
+    billingCustomer: billingCustomer as BillingCustomerRow | null,
+    subscriptions: (subscriptions ?? []) as SubscriptionRow[],
+    usageEvents: (usageEvents ?? []) as UsageEventRow[],
   };
 }
 

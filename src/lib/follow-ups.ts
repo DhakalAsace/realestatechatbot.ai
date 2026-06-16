@@ -14,6 +14,10 @@ export type FollowUpDeliveryResult =
 type FollowUpEnv = Record<string, string | undefined>;
 type Fetcher = (input: string, init: RequestInit) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown>; text: () => Promise<string> }>;
 
+export type FollowUpEmailReadiness =
+  | { ready: true; email: string; apiKey: string; from: string }
+  | { ready: false; reason: string };
+
 const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
 const placeholderPattern = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
 
@@ -57,6 +61,19 @@ export function matchesFollowUpTrigger({
   return appointmentTypes.includes("showing");
 }
 
+export function getFollowUpEmailReadiness({ recipientEmail, env = process.env }: { recipientEmail?: string | null; env?: FollowUpEnv }): FollowUpEmailReadiness {
+  const enabled = env.FOLLOW_UP_EMAIL_ENABLED === "true";
+  const apiKey = env.RESEND_API_KEY?.trim();
+  const from = env.RESEND_FROM_EMAIL?.trim();
+  const email = normalizeEmail(recipientEmail);
+
+  if (!enabled) return { ready: false, reason: "follow_up_email_disabled" };
+  if (!apiKey) return { ready: false, reason: "missing_resend_api_key" };
+  if (!from) return { ready: false, reason: "missing_resend_from_email" };
+  if (!email) return { ready: false, reason: "missing_lead_email" };
+  return { ready: true, email, apiKey, from };
+}
+
 export async function sendFollowUpEmail({
   recipientEmail,
   subject,
@@ -72,15 +89,8 @@ export async function sendFollowUpEmail({
   env?: FollowUpEnv;
   fetcher?: Fetcher;
 }): Promise<FollowUpDeliveryResult> {
-  const enabled = env.FOLLOW_UP_EMAIL_ENABLED === "true";
-  const apiKey = env.RESEND_API_KEY?.trim();
-  const from = env.RESEND_FROM_EMAIL?.trim();
-  const email = normalizeEmail(recipientEmail);
-
-  if (!enabled) return { status: "skipped", reason: "follow_up_email_disabled" };
-  if (!apiKey) return { status: "skipped", reason: "missing_resend_api_key" };
-  if (!from) return { status: "skipped", reason: "missing_resend_from_email" };
-  if (!email) return { status: "skipped", reason: "missing_lead_email" };
+  const readiness = getFollowUpEmailReadiness({ recipientEmail, env });
+  if (!readiness.ready) return { status: "skipped", reason: readiness.reason };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4000);
@@ -89,12 +99,12 @@ export async function sendFollowUpEmail({
     const response = await fetcher("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${readiness.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from,
-        to: [email],
+        from: readiness.from,
+        to: [readiness.email],
         subject,
         text: `${body}\n\nUnsubscribe: ${unsubscribeUrl}`,
         headers: {

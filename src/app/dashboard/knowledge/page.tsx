@@ -115,6 +115,7 @@ function Field({ label, name, defaultValue, required = false }: { label: string;
 
 function getMessage(saved?: string, error?: string) {
   if (saved) return { kind: "success" as const, text: saved === "created" ? "Knowledge added." : "Knowledge saved." };
+  if (error === "limit") return { kind: "error" as const, text: "This workspace has reached the knowledge document limit for its plan." };
   if (error) return { kind: "error" as const, text: "Could not save knowledge. Check required fields, then try again." };
   return null;
 }

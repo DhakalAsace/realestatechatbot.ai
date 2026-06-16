@@ -115,6 +115,7 @@ function Field({ label, name, defaultValue, required = false, placeholder, input
 
 function getMessage(saved?: string, error?: string) {
   if (saved) return { kind: "success" as const, text: saved === "created" ? "Property added." : "Property saved." };
+  if (error === "limit") return { kind: "error" as const, text: "This workspace has reached the property limit for its plan." };
   if (error) return { kind: "error" as const, text: "Could not save property. Check required fields and URLs, then try again." };
   return null;
 }

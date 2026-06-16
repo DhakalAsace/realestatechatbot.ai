@@ -6,9 +6,13 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { normalizeCalendarUrl } from "@/lib/appointments";
+import { checkWorkspaceEntitlement } from "@/lib/billing/entitlements";
+import { getStripePriceId } from "@/lib/billing/plans";
+import { getStripeClient, getStripeRuntimeStatus } from "@/lib/billing/stripe";
 import { channelStatuses, channelTypes, defaultChannelMedium, defaultChannelSource, normalizeAllowedOrigins, sanitizeSourceText } from "@/lib/channels";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/env";
 import { createUnsubscribeToken, hashFollowUpToken, normalizeEmail } from "@/lib/follow-ups";
 import { hashValue } from "@/lib/security";
 import { slugify, withShortSuffix } from "@/lib/slug";
@@ -107,6 +111,10 @@ const followUpMessageSchema = z.object({
 const leadEmailPreferenceSchema = z.object({
   leadId: z.string().uuid(),
   status: z.enum(["opted_in", "unsubscribed"]),
+});
+
+const billingCheckoutSchema = z.object({
+  planKey: z.enum(["starter", "pro"]),
 });
 
 const appointmentUpdateSchema = z.object({
@@ -241,6 +249,9 @@ export async function createWorkspaceInvitation(formData: FormData) {
   });
 
   if (!parsed.success || parsed.data.workspaceId !== membership.workspace_id) redirect("/dashboard/team?error=invite-validation");
+
+  const teamEntitlement = await checkWorkspaceEntitlement(getSupabaseAdminClient(), membership.workspace_id, "team_members");
+  if (!teamEntitlement.allowed) redirect("/dashboard/team?error=limit");
 
   const token = randomBytes(24).toString("base64url");
   const { error } = await supabase.from("workspace_invitations").insert({
@@ -436,6 +447,9 @@ export async function createChannel(formData: FormData) {
     redirect("/dashboard/channels?error=origins");
   }
 
+  const channelEntitlement = await checkWorkspaceEntitlement(getSupabaseAdminClient(), bot.workspace_id, "channels");
+  if (!channelEntitlement.allowed) redirect("/dashboard/channels?error=limit");
+
   const { error } = await supabase.from("bot_channels").insert({
     workspace_id: bot.workspace_id,
     bot_id: bot.id,
@@ -450,7 +464,7 @@ export async function createChannel(formData: FormData) {
     settings: {},
   });
 
-  if (error) redirect("/dashboard/channels?error=create");
+  if (error) redirect(`/dashboard/channels?error=${billingLimitError(error) ? "limit" : "create"}`);
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/channels");
@@ -476,7 +490,7 @@ export async function updateChannel(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   const { data: channel } = await supabase
     .from("bot_channels")
-    .select("id, type")
+    .select("id, workspace_id, type, status")
     .eq("id", parsed.data.channelId)
     .maybeSingle();
 
@@ -485,6 +499,11 @@ export async function updateChannel(formData: FormData) {
   const allowedOrigins = normalizeAllowedOrigins(parsed.data.allowedOrigins);
   if (channel.type === "web_embed" && parsed.data.status === "active" && allowedOrigins.length === 0) {
     redirect("/dashboard/channels?error=origins");
+  }
+
+  if (parsed.data.status === "active" && channel.status !== "active") {
+    const channelEntitlement = await checkWorkspaceEntitlement(getSupabaseAdminClient(), channel.workspace_id, "channels");
+    if (!channelEntitlement.allowed) redirect("/dashboard/channels?error=limit");
   }
 
   const { error } = await supabase
@@ -500,7 +519,7 @@ export async function updateChannel(formData: FormData) {
     })
     .eq("id", parsed.data.channelId);
 
-  if (error) redirect("/dashboard/channels?error=update");
+  if (error) redirect(`/dashboard/channels?error=${billingLimitError(error) ? "limit" : "update"}`);
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/channels");
@@ -529,7 +548,7 @@ export async function updateBot(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   const { data: existingBot } = await supabase
     .from("bots")
-    .select("id, workspace_id, agent_profile_id")
+    .select("id, workspace_id, agent_profile_id, status")
     .eq("id", parsed.data.botId)
     .maybeSingle();
 
@@ -546,6 +565,11 @@ export async function updateBot(formData: FormData) {
       .maybeSingle();
 
     if (!profile) redirect(`/dashboard/bots/${parsed.data.botId}?error=profile`);
+  }
+
+  if (parsed.data.status === "active" && existingBot.status !== "active") {
+    const botEntitlement = await checkWorkspaceEntitlement(getSupabaseAdminClient(), existingBot.workspace_id, "active_bots");
+    if (!botEntitlement.allowed) redirect(`/dashboard/bots/${parsed.data.botId}?error=limit`);
   }
 
   const botCalendarUrl = normalizeCalendarUrl(parsed.data.calendarUrl);
@@ -569,7 +593,11 @@ export async function updateBot(formData: FormData) {
   if (error || (updatedBots?.length ?? 0) !== 1) {
     const errorCode = error && "code" in error ? error.code : undefined;
     const errorMessage = error?.message ?? "";
-    const reason = errorCode === "23505" || errorMessage.includes("bots_slug_key") ? "duplicate-slug" : "update";
+    const reason = billingLimitError(error)
+      ? "limit"
+      : errorCode === "23505" || errorMessage.includes("bots_slug_key")
+        ? "duplicate-slug"
+        : "update";
 
     redirect(`/dashboard/bots/${parsed.data.botId}?error=${reason}`);
   }
@@ -599,13 +627,16 @@ export async function createProperty(formData: FormData) {
   const bot = await loadBotForAction(supabase, parsed.data.botId);
   if (!bot) redirect("/dashboard/properties?error=bot");
 
+  const propertyEntitlement = await checkWorkspaceEntitlement(getSupabaseAdminClient(), bot.workspace_id, "properties");
+  if (!propertyEntitlement.allowed) redirect("/dashboard/properties?error=limit");
+
   const { error } = await supabase.from("properties").insert({
     workspace_id: bot.workspace_id,
     bot_id: bot.id,
     ...propertyPayload(parsed.data),
   });
 
-  if (error) redirect("/dashboard/properties?error=create");
+  if (error) redirect(`/dashboard/properties?error=${billingLimitError(error) ? "limit" : "create"}`);
 
   revalidatePath("/dashboard/properties");
   redirect("/dashboard/properties?saved=created");
@@ -643,13 +674,16 @@ export async function createKnowledgeDocument(formData: FormData) {
   const bot = await loadBotForAction(supabase, parsed.data.botId);
   if (!bot) redirect("/dashboard/knowledge?error=bot");
 
+  const knowledgeEntitlement = await checkWorkspaceEntitlement(getSupabaseAdminClient(), bot.workspace_id, "knowledge_documents");
+  if (!knowledgeEntitlement.allowed) redirect("/dashboard/knowledge?error=limit");
+
   const { error } = await supabase.from("knowledge_documents").insert({
     workspace_id: bot.workspace_id,
     bot_id: bot.id,
     ...knowledgePayload(parsed.data),
   });
 
-  if (error) redirect("/dashboard/knowledge?error=create");
+  if (error) redirect(`/dashboard/knowledge?error=${billingLimitError(error) ? "limit" : "create"}`);
 
   revalidatePath("/dashboard/knowledge");
   redirect("/dashboard/knowledge?saved=created");
@@ -893,6 +927,86 @@ export async function updateLeadEmailPreference(formData: FormData) {
   redirect(`/dashboard/leads/${parsed.data.leadId}?saved=follow-up`);
 }
 
+
+export async function createBillingCheckoutSession(formData: FormData) {
+  const { user, membership } = await requireActionContext();
+  ensureManager(membership.role, "/dashboard/billing?error=permission");
+  const parsed = billingCheckoutSchema.safeParse({ planKey: formData.get("planKey") });
+  if (!parsed.success) redirect("/dashboard/billing?error=plan");
+
+  const runtimeStatus = getStripeRuntimeStatus();
+  const priceId = getStripePriceId(parsed.data.planKey);
+  if (!runtimeStatus.checkoutReady || !priceId) redirect("/dashboard/billing?error=config");
+
+  const admin = getSupabaseAdminClient();
+  const stripe = getStripeClient();
+  const appUrl = getAppUrl();
+  const { data: existingCustomer } = await admin
+    .from("billing_customers")
+    .select("id, stripe_customer_id")
+    .eq("workspace_id", membership.workspace_id)
+    .maybeSingle();
+
+  let stripeCustomerId = (existingCustomer as { stripe_customer_id?: string } | null)?.stripe_customer_id;
+  if (!stripeCustomerId) {
+    const customer = await stripe.customers.create({
+      email: user.email ?? undefined,
+      metadata: { workspace_id: membership.workspace_id, created_by: user.id },
+    });
+    stripeCustomerId = customer.id;
+    const { error } = await admin.from("billing_customers").upsert(
+      {
+        workspace_id: membership.workspace_id,
+        stripe_customer_id: stripeCustomerId,
+        email: user.email ?? null,
+        created_by: user.id,
+        metadata: { source: "dashboard_checkout" },
+      },
+      { onConflict: "workspace_id" },
+    );
+    if (error) redirect("/dashboard/billing?error=customer");
+  }
+
+  const metadata = { workspace_id: membership.workspace_id, plan_key: parsed.data.planKey, created_by: user.id };
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    customer: stripeCustomerId,
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: `${appUrl}/dashboard/billing?checkout=success`,
+    cancel_url: `${appUrl}/dashboard/billing?checkout=cancelled`,
+    metadata,
+    subscription_data: { metadata },
+  });
+
+  if (!session.url) redirect("/dashboard/billing?error=checkout");
+  redirect(session.url);
+}
+
+export async function createBillingPortalSession() {
+  const { membership } = await requireActionContext();
+  ensureManager(membership.role, "/dashboard/billing?error=permission");
+
+  const runtimeStatus = getStripeRuntimeStatus();
+  if (!runtimeStatus.checkoutReady) redirect("/dashboard/billing?error=config");
+
+  const admin = getSupabaseAdminClient();
+  const { data: customer } = await admin
+    .from("billing_customers")
+    .select("stripe_customer_id")
+    .eq("workspace_id", membership.workspace_id)
+    .maybeSingle();
+
+  const stripeCustomerId = (customer as { stripe_customer_id?: string } | null)?.stripe_customer_id;
+  if (!stripeCustomerId) redirect("/dashboard/billing?error=customer");
+
+  const session = await getStripeClient().billingPortal.sessions.create({
+    customer: stripeCustomerId,
+    return_url: `${getAppUrl()}/dashboard/billing`,
+  });
+
+  redirect(session.url);
+}
+
 export async function signOut() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
@@ -1072,6 +1186,10 @@ function normalizeOptionalUrl(value: string | undefined) {
   } catch {
     return null;
   }
+}
+
+function billingLimitError(error: { message?: string | null } | null | undefined) {
+  return (error?.message ?? "").includes("billing_limit_") || (error?.message ?? "").includes("billing_subscription_inactive");
 }
 
 function onboardingErrorUrl(error: { message?: string; code?: string }, botSlug: string) {

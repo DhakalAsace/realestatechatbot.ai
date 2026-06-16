@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import type { AppointmentType } from "@/lib/appointments";
+import { recordUsageEvent } from "@/lib/billing/entitlements";
 import type { LeadDraft } from "@/lib/chat/types";
 import {
   createUnsubscribeToken,
   hashFollowUpToken,
   matchesFollowUpTrigger,
+  getFollowUpEmailReadiness,
   normalizeEmail,
   renderFollowUpTemplate,
   sendFollowUpEmail,
@@ -355,6 +357,21 @@ async function processState(admin: AdminClient, state: StateRecord): Promise<Pro
     return stats;
   }
 
+  const readiness = getFollowUpEmailReadiness({ recipientEmail: email });
+  if (!readiness.ready) {
+    const event = await recordNotification(admin, state, lead, message, {
+      status: "skipped",
+      reason: readiness.reason,
+      recipientEmail: email,
+      payload: { sequenceId: sequence.id, triggerType: sequence.trigger_type },
+    });
+    if (event.error) return finishWithTerminalFailure(admin, state, stats, "notification_event_failed", event.error);
+
+    await updateState(admin, state, { status: "skipped", attempt_count: state.attempt_count + 1, next_send_at: null, last_notification_event_id: event.id, errors: appendError(state.errors, readiness.reason) });
+    stats.skipped = 1;
+    return stats;
+  }
+
   const agentName = await loadAgentName(admin, lead);
   const templateValues = {
     lead_name: lead.name ?? "there",
@@ -365,6 +382,29 @@ async function processState(admin: AdminClient, state: StateRecord): Promise<Pro
   };
   const subject = renderFollowUpTemplate(message.subject_template, templateValues).slice(0, 200);
   const body = renderFollowUpTemplate(message.body_template, templateValues).slice(0, 4000);
+  const followUpUsage = await recordUsageEvent(admin, {
+    workspaceId: state.workspace_id,
+    eventType: "follow_up_email",
+    sourceType: "lead_follow_up_state",
+    sourceId: state.id,
+    idempotencyKey: `follow_up_email:${state.id}:${message.id}:${state.attempt_count + 1}`,
+    metadata: { leadId: lead.id, sequenceId: sequence.id, messageId: message.id },
+  });
+  if (!followUpUsage.ok) return finishWithFailure(admin, state, stats, "usage_record_failed", followUpUsage.error);
+  if (!followUpUsage.allowed) {
+    const event = await recordNotification(admin, state, lead, message, {
+      status: "skipped",
+      reason: "billing_limit_reached",
+      recipientEmail: email,
+      payload: { sequenceId: sequence.id, triggerType: sequence.trigger_type, feature: "monthly_follow_up_emails" },
+    });
+    if (event.error) return finishWithTerminalFailure(admin, state, stats, "notification_event_failed", event.error);
+
+    await updateState(admin, state, { status: "skipped", attempt_count: state.attempt_count + 1, next_send_at: null, last_notification_event_id: event.id, errors: appendError(state.errors, "billing_limit_reached") });
+    stats.skipped = 1;
+    return stats;
+  }
+
   const delivery = await sendFollowUpEmail({ recipientEmail: email, subject, body, unsubscribeUrl });
   const event = await recordNotification(admin, state, lead, message, {
     status: delivery.status,

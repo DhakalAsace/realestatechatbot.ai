@@ -9,8 +9,8 @@ if (!existsSync(staticDir)) {
   throw new Error("Missing .next/static. Run npm run build before npm run test:bundle-secrets.");
 }
 
-const privateEnvNames = ["SUPABASE_SECRET_KEY", "OPENAI_API_KEY", "CHAT_WIDGET_TOKEN_SECRET", "DATABASE_URL", "POSTGRES_URL", "RESEND_API_KEY"];
-const forbiddenLiterals = ["sk-proj-", "service_role", "postgres://", "postgrestoken", "SUPABASE_SECRET_KEY", "OPENAI_API_KEY", "CHAT_WIDGET_TOKEN_SECRET", "RESEND_API_KEY"];
+const privateEnvNames = ["SUPABASE_SECRET_KEY", "OPENAI_API_KEY", "CHAT_WIDGET_TOKEN_SECRET", "DATABASE_URL", "POSTGRES_URL", "RESEND_API_KEY", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"];
+const forbiddenLiterals = ["sk-proj-", "service_role", "postgres://", "postgrestoken", "SUPABASE_SECRET_KEY", "OPENAI_API_KEY", "CHAT_WIDGET_TOKEN_SECRET", "RESEND_API_KEY", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "sk_live_", "sk_test_", "whsec_"];
 const envValues = loadPrivateEnvValues(envPath, privateEnvNames);
 const findings = [];
 

@@ -26,3 +26,10 @@ playwright-report/
 
 # codex local auth/profile state
 .codex-home/
+
+# typescript
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# supabase local metadata
+supabase/.temp/

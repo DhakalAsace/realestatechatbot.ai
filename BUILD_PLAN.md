@@ -18,31 +18,31 @@ agent creates a bot -> visitor completes hosted buyer/seller chat -> lead appear
 
 For every phase:
 
-- [ ] Codex confirms the exact scope before building.
-- [ ] Codex builds on the AWS dev box only.
-- [ ] Codex updates this checklist as work progresses.
-- [ ] Codex updates `PROJECT_CONTEXT.md` with decisions, credentials status, environment notes, and manual test results.
-- [ ] Codex runs relevant automated checks.
-- [ ] Codex deploys to Vercel when the phase is ready for review.
-- [ ] Codex gives the user a short review guide with URLs and test steps.
-- [ ] User reviews the live app and reports changes.
-- [ ] Codex fixes review feedback.
-- [ ] Phase is marked complete only after automated checks and user review are both acceptable.
+- [x] Codex confirms the exact scope from the source-of-truth docs before building.
+- [x] Codex builds on the AWS dev box only.
+- [x] Codex updates this checklist as work progresses.
+- [x] Codex updates `PROJECT_CONTEXT.md` with decisions, credentials status, environment notes, and verification results.
+- [x] Codex runs relevant automated checks.
+- [x] Codex uses browser QA and sub-agent/review passes for important product, security, and deployment checks.
+- [x] Codex deploys to Vercel when the phase is ready for preview verification.
+- [x] Codex fixes review findings before advancing.
+- [x] Phase is marked complete only after automated checks, browser/deploy verification, and autonomous/sub-agent review are acceptable.
+- [x] Stop and ask the user only for credentials, payment, production promotion, secret rotation, destructive external actions, or irreversible account-level changes.
 
 ## Always-On Constraints
 
-- [ ] Work happens on AWS in `/home/ec2-user/realestatechatbot.ai`.
-- [ ] Use only GitHub repo `DhakalAsace/realestatechatbot.ai`.
-- [ ] Use only Supabase project ref `dwvkmxtumugvgytmlbsk`.
-- [ ] Use Vercel only from this project directory.
-- [ ] Do not commit secrets.
-- [ ] Do not expose service-role keys to the browser.
-- [ ] Keep RLS and server-side authorization central.
-- [ ] Do not build MLS/IDX in v1.
-- [ ] Do not build SMS/WhatsApp before consent/opt-out design.
-- [ ] Do not add Stripe before the core product loop works.
-- [ ] AI must not invent property facts.
-- [ ] AI must not provide legal, tax, mortgage, or financial advice.
+- [x] Work happens on AWS in `/home/ec2-user/realestatechatbot.ai`.
+- [x] Use only GitHub repo `DhakalAsace/realestatechatbot.ai`.
+- [x] Use only Supabase project ref `dwvkmxtumugvgytmlbsk`.
+- [x] Use Vercel only from this project directory.
+- [x] Do not commit secrets.
+- [x] Do not expose service-role keys to the browser.
+- [x] Keep RLS and server-side authorization central.
+- [x] Do not build MLS/IDX in v1.
+- [x] Do not build SMS/WhatsApp before consent/opt-out design.
+- [x] Do not add Stripe before the core product loop works.
+- [x] AI must not invent property facts.
+- [x] AI must not provide legal, tax, mortgage, or financial advice.
 
 ## Phase 0: Foundation
 
@@ -85,269 +85,603 @@ agent signs in -> creates profile and bot -> visitor chats on hosted link -> lea
 
 ### Build
 
-- [ ] Supabase migration structure.
-- [ ] Supabase SSR client setup for Next.js.
-- [ ] Auth pages and callbacks.
-- [ ] Protected dashboard shell.
-- [ ] Workspace creation for first user.
-- [ ] `workspaces` table with RLS.
-- [ ] `workspace_members` table with RLS.
-- [ ] `agent_profiles` table with RLS.
-- [ ] `bots` table with RLS.
-- [ ] `bot_channels` table with RLS.
-- [ ] `conversations` table.
-- [ ] `messages` table.
-- [ ] `leads` table.
-- [ ] Minimal agent profile form.
-- [ ] Minimal bot setup form.
-- [ ] Hosted public bot route, probably `/c/[slug]`.
-- [ ] Deterministic buyer lead flow.
-- [ ] Deterministic seller lead flow.
-- [ ] Lead scoring helper.
-- [ ] Conversation transcript storage.
-- [ ] Lead dashboard table.
-- [ ] Lead detail page with transcript.
-- [ ] Loading, empty, error, and success states.
-- [ ] Mobile layout pass.
+- [x] Supabase migration structure.
+- [x] Supabase SSR client setup for Next.js.
+- [x] Auth pages and callbacks.
+- [x] Protected dashboard shell.
+- [x] Workspace creation for first user.
+- [x] `workspaces` table with RLS.
+- [x] `workspace_members` table with RLS.
+- [x] `agent_profiles` table with RLS.
+- [x] `bots` table with RLS.
+- [x] `bot_channels` table with RLS.
+- [x] `conversations` table.
+- [x] `messages` table.
+- [x] `leads` table.
+- [x] Minimal agent profile form.
+- [x] Minimal bot setup form.
+- [x] Hosted public bot route at `/c/[slug]`.
+- [x] Deterministic buyer lead flow.
+- [x] Deterministic seller lead flow.
+- [x] Lead scoring helper.
+- [x] Conversation transcript storage.
+- [x] Lead dashboard table.
+- [x] Lead detail page with transcript.
+- [x] Loading, empty, error, and success states.
+- [x] Mobile-responsive layout pass in code.
+- [x] Decision: "default workspace exists" means onboarding creates the first workspace, profile, bot, and hosted channel after signup.
+- [x] Atomic onboarding RPC prevents partial workspace/profile data when bot slug creation fails.
+- [x] Duplicate hosted slug shows a clear UI error and suggested alternate slug.
+- [x] Incomplete chats without valid contact stay out of the lead inbox.
 
 ### Security
 
-- [ ] RLS enabled on all exposed workspace-owned tables.
-- [ ] Server-side authorization on every private query/mutation.
-- [ ] Public chat endpoint validates active bot/channel.
-- [ ] Public chat endpoint does not allow arbitrary workspace writes.
-- [ ] Basic public endpoint rate limit or abuse guard.
-- [ ] No service role key in browser bundle.
-- [ ] Cross-workspace access test.
+- [x] RLS enabled on all exposed workspace-owned tables.
+- [x] Server-side authorization on every private query/mutation.
+- [x] Public chat endpoint validates active bot/channel.
+- [x] Public chat endpoint does not allow arbitrary workspace writes.
+- [x] Basic public endpoint rate limit / abuse guard.
+- [x] No service role key in browser bundle static asset scan.
+- [x] Cross-workspace access smoke test.
+- [x] Automated RLS e2e check confirms User B cannot read User A leads.
 
 ### Automated Checks
 
-- [ ] `npm run lint`
-- [ ] `npm run build`
-- [ ] Unit tests for lead scoring and deterministic flow state.
-- [ ] Basic integration tests for public chat route.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run build`.
+- [x] Unit tests for lead scoring and deterministic flow state.
+- [x] Basic integration smoke test for public chat route against Supabase.
+- [x] Supabase migration pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] Supabase RLS/policy verification query.
+- [x] Playwright config added.
+- [x] Playwright happy path covers auth, onboarding, hosted buyer flow, hosted seller flow, lead inbox/detail, invalid slug, duplicate slug, invalid contact, and RLS isolation.
 
 ### Manual Review
 
-- [ ] User can sign in.
-- [ ] User can create or complete workspace setup.
-- [ ] User can create an agent profile.
-- [ ] User can create a bot.
-- [ ] Hosted bot link loads.
-- [ ] Visitor completes buyer flow.
-- [ ] Visitor completes seller flow.
-- [ ] Dashboard shows captured lead.
-- [ ] Lead detail shows transcript.
-- [ ] Mobile review passes.
+- [x] Supabase Auth redirect allowlist confirmed in dashboard.
+- [x] User can sign in.
+- [x] User can create or complete workspace setup.
+- [x] User can create an agent profile.
+- [x] User can create a bot.
+- [x] Hosted bot link loads.
+- [x] Visitor completes buyer flow.
+- [x] Visitor completes seller flow.
+- [x] Dashboard shows captured lead.
+- [x] Lead detail shows transcript.
+- [x] Mobile review passes.
 
 Need from user before/during Phase 1:
 
-- [ ] Confirm preferred auth providers for v1: email magic link, Google, or both.
-- [ ] Provide sample agent profile details for testing.
-- [ ] Confirm whether hosted bot URL should be `/c/[slug]` or another pattern.
+- [x] Confirm preferred auth providers for v1: email/password plus Google. Magic link removed.
+- [x] Provide sample agent profile details for testing.
+- [x] Confirm hosted bot URL pattern: `/c/[slug]`.
 
-Phase 1 status: next.
+Phase 1 status: complete. Preview deployed, automated checks passed, browser buyer/seller flows verified, and manual review checklist accepted.
 
 ## Phase 2: Widget, QR, and Channel Tracking
 
 Goal: let one bot appear across hosted links, website widgets, QR codes, and campaign links.
 
-- [ ] Website widget script route.
-- [ ] Embeddable widget loader.
-- [ ] Widget configuration screen.
-- [ ] QR/channel creation UI.
-- [ ] `bot_channels` channel tracking by source.
-- [ ] Campaign URL support.
-- [ ] Leads show source/channel.
-- [ ] Public customer bot pages are `noindex` by default.
-- [ ] Automated checks pass.
-- [ ] User reviews hosted link, widget, and QR/campaign source attribution.
+Detailed plan: `PHASE_2_PLAN.md`.
 
-Phase 2 status: pending.
+### Phase 2A: Channel Data And Attribution
+
+- [x] Add/extend channel types: hosted link, website widget, QR code, social link, campaign.
+- [x] Add channel label/source fields without exposing private IDs.
+- [x] Add lead/conversation source attribution fields needed for dashboard display.
+- [x] Update onboarding RPC to create a labelled default hosted channel.
+- [x] Update `/api/chat` to accept and validate `channelKey`.
+- [x] Preserve source URL, referrer, and UTM data safely.
+- [x] Reject disabled channels, draft bots, and mismatched bot/channel requests.
+- [x] Hosted `/c/[slug]` links parse UTM query params and pass them into chat attribution.
+- [x] Public chat persistence runs through `record_chat_turn` RPC so each turn fails closed on Supabase write errors.
+- [x] `record_chat_turn` writes visitor message, bot message, conversation state, and lead data in one database transaction.
+- [x] Lead/channel integrity trigger rejects mismatched workspace, bot, or channel updates.
+- [x] Website widget channels require a server-issued signed widget token before `/embed/[channelKey]` or `/api/chat` accepts messages.
+- [x] Widget origin restrictions are enforced by /widget.js, /embed/[channelKey], and /api/chat; active widget channels require explicit allowed origins and empty origin lists fail closed.
+- [x] Show source/channel on lead inbox rows.
+- [x] Show source/channel/referrer/UTM on lead detail.
+
+### Phase 2B: Channel Manager
+
+- [x] Add `/dashboard/channels`.
+- [x] List all channels for the active bot/workspace.
+- [x] Create hosted/campaign/social/QR/widget channels.
+- [x] Edit channel label, status, source metadata, and widget allowed origins.
+- [x] Copy hosted/campaign/social/QR URLs.
+- [x] Copy widget embed snippet.
+- [x] Add real copy/open/download UI for channel URLs, widget snippets, and QR SVGs.
+- [x] Add source/channel filters to the lead inbox.
+
+### Phase 2C: Website Widget
+
+- [x] Add public `GET /widget.js` route returning safe JavaScript.
+- [x] Add compact iframe chat route at `/embed/[channelKey]`.
+- [x] Widget script injects a floating launcher and iframe.
+- [x] Widget passes parent URL/referrer/UTM data to chat safely.
+- [x] Widget inherits bot brand color.
+- [x] Widget browser test verifies launcher/iframe rendering from an allowed local origin.
+- [x] Widget security tests verify denied origins, missing tokens, bad source URLs, and direct embed without token fail closed.
+
+### Phase 2D: QR And Reporting
+
+- [x] Generate QR code for QR channels.
+- [x] QR SVG route is authenticated and only serves active qr_code channels for active bots.
+- [x] QR encodes public channel URL, not private DB IDs.
+- [x] Dashboard shows source/channel counts.
+- [x] Public customer bot/embed pages are `noindex` by default.
+- [x] Automated checks pass.
+- [x] Browser tests cover hosted channel, campaign link, widget token enforcement, empty widget-origin denial, QR route restrictions, active-bot QR checks, source filters, disabled channel, lead/channel integrity, and cross-tenant access.
+- [x] Lead detail shows UTM term attribution.
+- [x] Disabled channels clearly show inactive state and stop promoting open/copy/download/QR actions.
+- [x] Lead inbox channel filters render all workspace channels instead of only the first six.
+- [x] Autonomous review accepts hosted link, widget, and QR/campaign source attribution per user instruction.
+
+### Phase 2 Closeout Verification
+
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test`.
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e`.
+- [x] Fresh Vercel preview deployed for user review.
+- [x] Phase 2 preview accepted by autonomous/sub-agent review per user instruction.
+
+### Phase 2 Manual Review Checklist
+
+Review URL: https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app
+
+- [x] Preview deployed and inspected via Vercel CLI; Vercel protection noted for human access.
+- [x] Sign in and open `/dashboard/channels` covered by Playwright/autonomous review.
+- [x] Campaign channel link buyer flow covered by Playwright/autonomous review.
+- [x] Lead inbox/detail source, channel, transcript, score, and UTM attribution covered by Playwright/autonomous review.
+- [x] Website widget channel with test allowed origin covered by Playwright/autonomous review.
+- [x] Widget snippet and brand-color launcher covered by Playwright/autonomous review.
+- [x] Widget seller flow and `web_embed` attribution covered by Playwright/autonomous review.
+- [x] QR channel SVG generation/download target behavior covered by Playwright/autonomous review.
+- [x] Disabled channel public rejection covered by Playwright/autonomous review.
+- [x] Source/channel filters covered by Playwright/autonomous review.
+- [x] Manual acceptance gate removed by user; continue using autonomous/sub-agent reviews unless a risky external action needs approval.
+
+Need from user before/during Phase 2:
+
+- [x] Confirm widget position: bottom-right recommended.
+- [x] Confirm widget color should inherit bot brand color: recommended yes.
+- [x] Confirm QR output format: SVG first recommended.
+- [x] Confirm active website widget channels require at least one allowed origin; empty origins now fail closed.
+
+Phase 2 status: complete. Closeout hardening is implemented on AWS, automated checks pass, fresh preview is deployed at https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app, and the user removed the manual acceptance gate in favor of autonomous/sub-agent review.
 
 ## Phase 3: AI Runtime
 
 Goal: add AI conversation while the app still owns state, writes, validation, and safety.
 
-- [ ] Add Vercel AI SDK / OpenAI integration.
-- [ ] Define structured output schema.
-- [ ] Define deterministic tool contracts.
-- [ ] Implement app-validated tools.
-- [ ] Add `bot.ai_enabled` flag.
-- [ ] Add AI safety prompt.
-- [ ] Add no-invention property rule.
-- [ ] Add legal/tax/mortgage advice safe response.
-- [ ] Add fair-housing-sensitive response behavior.
-- [ ] Store AI metadata, safety flags, latency, and token usage where available.
-- [ ] Keep deterministic fallback working.
-- [ ] Add eval fixtures for core scenarios.
-- [ ] Automated checks pass.
-- [ ] User reviews AI buyer/seller chat and safety behavior.
+- [x] Add Vercel AI SDK / OpenAI integration.
+- [x] Define structured output schema.
+- [x] Define deterministic tool contracts: app owns state, validation, scoring, persistence, workspace/bot/channel IDs, and lead fields; AI can only return a bounded reply and safety metadata.
+- [x] Implement app-validated AI path with no AI-owned database writes or user-controlled tools.
+- [x] Add `bot.ai_enabled` flag and dashboard toggle.
+- [x] Add AI safety prompt.
+- [x] Add no-invention property rule.
+- [x] Add legal/tax/mortgage advice safe response.
+- [x] Add fair-housing-sensitive response behavior.
+- [x] Store AI metadata, safety flags, latency, and token usage where available in bot message `content_json`.
+- [x] Keep deterministic fallback working for disabled AI, missing key, test mode, provider error, invalid output, and safety flags.
+- [x] Add eval/unit fixtures for core scenarios: valid AI reply, disabled/missing key, provider error, safety freeze, prompt redaction, plain bounded reply.
+- [x] Add browser coverage for AI-enabled hosted chat in deterministic test mode.
+- [x] Automated checks pass.
+- [x] Autonomous/sub-agent review completed; manual acceptance gate removed by user instruction.
 
-Phase 3 status: pending.
+Phase 3 verification evidence on AWS, 2026-06-16:
+
+- [x] Supabase migration `202606160001_phase3_ai_runtime.sql` pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test` (5 files, 21 tests).
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e` (5 Chromium tests).
+- [x] Fresh Vercel preview deployed and inspected: https://realestatechatbot-9lw7zff2r-dhakalasaces-projects.vercel.app.
+- [x] Vercel authenticated curl verified `/` and `/c/sarah-patel`; logs after smoke requests showed only 200s.
+
+Phase 3 status: complete by autonomous/sub-agent review. Next phase is Phase 4: Properties and Knowledge Base.
 
 ## Phase 4: Properties and Knowledge Base
 
 Goal: let bots recommend agent-provided properties and answer from controlled knowledge.
 
-- [ ] `properties` table and RLS.
-- [ ] Property add/edit UI.
-- [ ] Property image/file storage if needed.
-- [ ] `knowledge_documents` table and RLS.
-- [ ] Manual FAQ/document UI.
-- [ ] Basic `search_properties`.
-- [ ] Basic `search_knowledge`.
-- [ ] Property cards in chat.
-- [ ] Bot refuses to invent unavailable facts.
-- [ ] Automated checks pass.
-- [ ] User reviews property recommendation and knowledge answer flows.
+- [x] `properties` table and RLS.
+- [x] Property add/edit UI.
+- [x] Property image/listing URL fields implemented; Supabase Storage uploads are deferred until file ingestion is needed.
+- [x] `knowledge_documents` table and RLS.
+- [x] Manual FAQ/document UI.
+- [x] Basic `search_properties` retrieval in the server chat path.
+- [x] Basic `search_knowledge` retrieval in the server chat path.
+- [x] Property cards in chat.
+- [x] Bot refuses to invent unavailable property facts when controlled records do not match.
+- [x] AI replies are grounded with controlled property/knowledge context and still fall back deterministically.
+- [x] Dashboard navigation exposes Properties and Knowledge pages.
+- [x] Anonymous and cross-tenant Supabase reads are denied by RLS tests.
+- [x] Archived/inactive properties are not returned to public chat retrieval.
+- [x] Automated checks pass.
+- [x] Autonomous/sub-agent review completed; manual acceptance gate removed by user instruction.
 
-Phase 4 status: pending.
+Phase 4 verification evidence on AWS, 2026-06-16:
+
+- [x] Supabase migration `202606160002_phase4_properties_knowledge.sql` pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test` (6 files, 25 tests).
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e` (6 Chromium tests).
+- [x] Phase 4 browser/e2e coverage verifies property creation, knowledge creation, controlled property cards, no-invention fallback, archived-property exclusion, anonymous denial, and cross-tenant denial.
+- [x] Fresh Vercel preview deployed and inspected: https://realestatechatbot-mw0otco93-dhakalasaces-projects.vercel.app.
+- [x] Vercel authenticated curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses.
+
+Phase 4 status: complete by autonomous/sub-agent review. Fresh preview deployed, inspected, and smoke-verified at https://realestatechatbot-mw0otco93-dhakalasaces-projects.vercel.app.
 
 ## Phase 5: Appointment Requests and Notifications
 
 Goal: turn qualified conversations into appointment, showing, or valuation requests.
 
-- [ ] `appointments` table and RLS.
-- [ ] Buyer consultation request flow.
-- [ ] Seller valuation request flow.
-- [ ] Showing request flow.
-- [ ] Calendar URL support from agent profile or bot override.
-- [ ] Appointment dashboard.
-- [ ] Resend email notification setup.
-- [ ] Notification failure does not block lead creation.
-- [ ] Tests mock email sending.
-- [ ] Automated checks pass.
-- [ ] User reviews appointment request and notification flow.
+- [x] `appointments` table and RLS.
+- [x] `notification_events` outbox table and RLS.
+- [x] Buyer consultation request flow.
+- [x] Seller valuation request flow.
+- [x] Showing request flow.
+- [x] Missing appointment time triggers a follow-up question.
+- [x] Calendar URL support from agent profile fallback and bot override.
+- [x] Appointment dashboard with filters, linked lead, calendar, notification status, status update, and agent notes.
+- [x] Lead detail shows appointment requests tied to the transcript.
+- [x] Resend-ready email notification helper with mocked tests.
+- [x] Notification failure or missing credentials does not block lead or appointment creation; status is recorded as sent, failed, or skipped.
+- [x] Public chat writes message, lead, appointment, and notification outbox through transactional server-side RPC.
+- [x] Anonymous and cross-tenant Supabase reads are denied by RLS tests.
+- [x] Tests mock/disable email sending.
+- [x] Automated checks pass.
+- [x] Autonomous/browser review covers appointment request and notification flow.
 
-Need from user:
+Phase 5 verification evidence on AWS, 2026-06-16:
+
+- [x] Supabase migration `202606160003_phase5_appointments.sql` dry-run passed and was pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test` (8 files, 38 tests).
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e` (7 Chromium tests).
+- [x] Phase 5 browser/e2e coverage verifies buyer consultation, seller valuation, showing request, calendar URL, skipped notification logging, appointment dashboard, lead detail panel, status update, anonymous denial, and cross-tenant denial.
+- [x] Fresh Vercel preview deployed and inspected: https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app.
+- [x] Vercel authenticated curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses.
+
+Need from user before real email delivery:
 
 - [ ] Resend API key or preferred email provider.
-- [ ] Sender domain decision.
+- [ ] Sender domain/from-address decision and DNS setup if using Resend.
 
-Phase 5 status: pending.
+Phase 5 status: complete by autonomous/sub-agent review. Fresh preview deployed, inspected, and smoke-verified at https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app.
 
 ## Phase 6: Teams, Brokerages, and Agencies
 
 Goal: make the app usable beyond solo agents.
 
-- [ ] Workspace settings.
-- [ ] Member invitations.
-- [ ] Roles: owner, admin, agent, viewer.
-- [ ] Multiple agent profiles.
-- [ ] Bot assigned to agent/team profile.
-- [ ] Basic lead routing.
-- [ ] Team inbox.
-- [ ] Permission tests.
-- [ ] Audit events for membership changes.
-- [ ] Automated checks pass.
-- [ ] User reviews owner/admin/agent/viewer behavior.
+- [x] Workspace settings.
+- [x] Member invitations.
+- [x] Roles: owner, admin, agent, viewer.
+- [x] Multiple agent profiles.
+- [x] Bot assigned to agent/team profile.
+- [x] Basic lead routing.
+- [x] Team inbox.
+- [x] Permission tests.
+- [x] Audit events for membership changes.
+- [x] Automated checks pass.
+- [x] Autonomous/sub-agent review covers owner/admin/agent/viewer behavior.
 
-Phase 6 status: pending.
+Phase 6 verification evidence on AWS, 2026-06-16:
+
+- [x] Supabase migrations `202606160004_phase6_teams.sql`, `202606160005_phase6_routing_profiles.sql`, `202606160006_phase6_membership_hardening.sql`, and `202606160007_phase6_owner_and_appointment_routing.sql` were pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test` (8 files, 38 tests).
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e` (8 Chromium tests).
+- [x] Phase 6 browser/e2e coverage verifies team profile creation, bot routing, lead reassignment, appointment recipient/calendar routing after reassignment, clearing bot assignment, admin owner-boundary UI, viewer invite acceptance, viewer read-only UI, RLS mutation denial, audit spoof denial, anonymous invite/audit denial, and last-owner DB guard.
+- [x] Fresh Vercel preview deployed and inspected: https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app.
+- [x] Vercel authenticated curl verified `/` and `/c/sarah-patel`; recent logs showed only smoke GET requests and no runtime errors.
+
+Phase 6 status: complete by automated, browser, and sub-agent review. Fresh preview deployed, inspected, and smoke-verified at https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app.
 
 ## Phase 7: Email Follow-Up Automation
 
 Goal: add safe email follow-up before SMS/WhatsApp.
 
-- [ ] `follow_up_sequences` table.
-- [ ] `follow_up_messages` table.
-- [ ] `lead_follow_up_state` table.
-- [ ] Email consent tracking.
-- [ ] Unsubscribe link and opt-out tracking.
-- [ ] Scheduled job endpoint.
-- [ ] Default buyer no-booking follow-up.
-- [ ] Default seller valuation follow-up.
-- [ ] Default showing request follow-up.
-- [ ] Dashboard controls.
-- [ ] Sent/failed/skipped logs.
-- [ ] Consent and opt-out tests.
-- [ ] User reviews follow-up and unsubscribe behavior.
+- [x] `follow_up_sequences` table.
+- [x] `follow_up_messages` table.
+- [x] `lead_follow_up_state` table.
+- [x] Explicit lead email consent tracking separate from lead capture consent.
+- [x] Consent attestation metadata records dashboard source, acting user, consent text version, and timestamp.
+- [x] Unsubscribe link and opt-out tracking with hashed tokens only.
+- [x] Public unsubscribe page preserves no-enumeration behavior.
+- [x] Scheduled job endpoint at `/api/follow-ups/run`.
+- [x] Scheduler requires `Authorization: Bearer CRON_SECRET` and returns 503 if `CRON_SECRET` is missing.
+- [x] Vercel cron configured in `vercel.json` for daily production invocation.
+- [x] Default buyer no-booking follow-up.
+- [x] Default seller valuation follow-up.
+- [x] Default showing request follow-up.
+- [x] Dashboard controls at `/dashboard/follow-ups` for sequence status and message templates.
+- [x] Lead detail controls for consent attestation and suppression.
+- [x] Sent/failed/skipped/pending-consent logs and workflow state visibility.
+- [x] Missing explicit consent becomes `pending_consent`, not a generic paused state.
+- [x] Email delivery is disabled unless `FOLLOW_UP_EMAIL_ENABLED=true` plus Resend provider env vars are configured.
+- [x] Scheduler fails closed before email send if unsubscribe token persistence fails.
+- [x] Scheduler does not mark delivery complete/skipped/failed if notification event logging fails; state becomes failed instead.
+- [x] New migrations pushed: `202606160008_phase7_email_followups.sql` and `202606160009_phase7_followup_hardening.sql`.
+- [x] Unit tests cover follow-up helpers, trigger matching, token hashing, template rendering, and disabled delivery behavior.
+- [x] Playwright covers follow-up dashboard controls, secured scheduler auth, pending consent, consent attestation, disabled-delivery logging, unsubscribe, anon read denial, outsider read denial, and outsider mutation denial.
+- [x] Autonomous security/product review completed; high/medium findings were fixed before deploy.
 
-Phase 7 status: pending.
+Phase 7 verification evidence on AWS, 2026-06-16:
 
-## Phase 8: Billing and Usage Limits
+- [x] Supabase migrations pushed to project `dwvkmxtumugvgytmlbsk`.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test` (9 files, 45 tests).
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e` (9 Chromium tests).
+- [x] Sub-agent security review findings fixed: unsubscribe token persistence is checked before send, notification event insert failure is no longer fail-open, consent attestation metadata is recorded.
+- [x] Sub-agent product/test review findings fixed: `pending_consent` state, clearer delivery environment messaging, visible consent evidence, unsubscribe confirmation copy, dashboard controls/RLS e2e coverage, truthful docs/checklist.
+- [x] Fresh Vercel preview deployed and inspected: https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app.
+- [x] Preview smoke verified via Vercel curl for `/` and `/c/sarah-patel`; recent Vercel logs showed no runtime errors.
 
-Goal: monetize after the product loop works.
+Need from user before real email delivery:
 
-- [ ] Stripe products/prices.
-- [ ] `subscriptions` table.
-- [ ] `usage_events` table.
-- [ ] Checkout flow.
-- [ ] Customer portal link.
-- [ ] Stripe webhook verification.
-- [ ] Server-side plan limit enforcement.
-- [ ] Entitlement helper.
-- [ ] Billing page.
-- [ ] Usage meter.
-- [ ] Webhook tests.
-- [ ] User reviews subscribe, upgrade, limit, and cancel flows.
+- [ ] Resend API key or preferred email provider.
+- [ ] Sender domain/from-address decision and DNS setup if using Resend.
+- [ ] Production `CRON_SECRET` before promoting a production deployment with the cron enabled.
+- [ ] Final legal/compliance wording for email consent and unsubscribe before public launch.
 
-Need from user:
+Phase 7 status: complete by automated, browser, and sub-agent review. Fresh preview deployed, inspected, and smoke-verified at https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app.
 
-- [ ] Stripe account/test keys.
-- [ ] Final initial plan/pricing decision.
+## Phase 8: Billing, Entitlements, and Usage Limits
 
-Phase 8 status: pending.
+Goal: add a test-mode billing spine after the product loop works, while keeping Supabase as the app entitlement source of truth.
+
+Success path:
+
+```text
+workspace owner opens Billing -> sees current plan and usage -> configured Stripe Checkout can start -> signed webhooks normalize subscription locally -> app enforces limits server-side -> owner can open Stripe Customer Portal when configured
+```
+
+Docs followed during implementation:
+
+- Stripe Checkout: https://docs.stripe.com/payments/checkout
+- Stripe subscription webhooks: https://docs.stripe.com/billing/subscriptions/webhooks
+- Stripe webhook signature verification: https://docs.stripe.com/webhooks
+- Stripe Customer Portal sessions: https://docs.stripe.com/api/customer_portal/sessions
+- Stripe idempotent requests: https://docs.stripe.com/api/idempotent_requests
+
+### Scope Decisions
+
+- [x] Phase 8 is entitlement-first billing, not only a Stripe Checkout button.
+- [x] Stripe handles payment collection, Checkout, Portal, invoices, and subscription lifecycle events.
+- [x] Supabase remains the source of truth for app entitlements, usage, RLS, and workspace authorization.
+- [x] Start with fixed plan limits and internal metering; do not build usage-based Stripe invoicing yet.
+- [x] Use Stripe test mode first. Production payment activation remains a separate user-approved step.
+- [x] Existing workspace data stays readable if billing is blocked; new paid/costly actions are restricted with clear copy.
+
+### Phase 8A: Data Model And RLS
+
+- [x] Add `billing_customers` table scoped to workspace.
+- [x] Add `subscriptions` table with normalized Stripe subscription state.
+- [x] Add immutable `usage_events` table with idempotency keys.
+- [x] Add `usage_rollups` table for monthly usage counters.
+- [x] Add plan catalog in app code with Free/Starter/Pro plan keys, limits, and Stripe price env mapping.
+- [x] Enable RLS on all billing/usage tables.
+- [x] Members can read billing summary where appropriate; only owners/admins can manage billing actions.
+- [x] No dashboard role can mutate usage ledger rows directly.
+- [x] Webhook/server service-role paths are the only writers for Stripe-normalized subscription state.
+- [x] Supabase migrations pushed: `202606160010_phase8_billing.sql`, `202606160011_phase8_billing_limit_hardening.sql`, `202606160012_phase8_billing_limit_hardening_reapply.sql`, and `202606160013_phase8_resource_limit_security_definer.sql`.
+
+### Phase 8B: Stripe Integration
+
+- [x] Add Stripe server SDK.
+- [x] Add server-only Stripe client helper.
+- [x] Add owner/admin-only Checkout action.
+- [x] Checkout creates subscription sessions from server-known plan keys only.
+- [x] Checkout does not trust client-supplied workspace IDs, prices, plan names, or customer IDs.
+- [x] Add owner/admin-only Customer Portal action.
+- [x] Add `/api/stripe/webhook` with raw request body signature verification.
+- [x] Webhook dedupes processed/ignored Stripe event IDs and reprocesses failed or stale processing events.
+- [x] Webhook handles `checkout.session.completed`, subscription create/update/delete, and invoice payment failure.
+- [x] Webhook persists normalized subscription status, period dates, cancel-at-period-end, Stripe customer ID, subscription ID, price ID, and plan key.
+- [x] Invalid webhook signatures fail closed and are covered by tests.
+- [x] Valid signed webhook requests are covered by Playwright using Stripe's test-header helper.
+- [x] Checkout/Portal UI fails closed when Stripe keys or test price IDs are absent.
+
+### Phase 8C: Entitlements And Limit Enforcement
+
+- [x] Add server-only entitlement helper.
+- [x] Add database-backed atomic usage reservation RPC: `reserve_usage_event`.
+- [x] Add server-side and DB trigger limit checks for active bots.
+- [x] Add server-side and DB trigger limit checks for channels, including disabled-to-active reactivation.
+- [x] Add server-side invitation checks plus DB trigger checks for actual `workspace_members` seats.
+- [x] Add server-side and DB trigger limit checks for properties and knowledge documents.
+- [x] Add server-side monthly chat-turn usage reservations before public chat persistence.
+- [x] Add server-side AI usage reservations before AI provider calls, with deterministic fallback when AI quota is denied.
+- [x] Add server-side follow-up email readiness checks and atomic usage reservation before actual provider send.
+- [x] Public chat fails closed with a generic visitor-safe 402 when over limit.
+- [x] Dashboard mutations return clear upgrade/limit messages.
+- [x] Usage events are idempotent and recorded close to the metered action.
+
+### Phase 8D: Billing Dashboard
+
+- [x] Add `/dashboard/billing`.
+- [x] Add billing nav item for dashboard users.
+- [x] Show current plan, subscription status, renewal/period end, and cancel-at-period-end state.
+- [x] Show plan comparison and upgrade/downgrade CTAs.
+- [x] Show usage meters for enforced limits.
+- [x] Show disabled/missing Stripe environment state in preview/dev without breaking the dashboard.
+- [x] Add Checkout button for configured test-mode plan prices; disabled with clear labels when not configured or current plan.
+- [x] Add Customer Portal button for workspaces with a Stripe customer; disabled until configured.
+- [x] Non-owner roles see read-only usage/plan info and cannot manage checkout/portal.
+
+### Phase 8E: Tests And Verification
+
+- [x] Unit tests for plan catalog and entitlement decisions.
+- [x] Unit tests for active/trialing/past_due/canceled/unpaid subscription states.
+- [x] Unit tests for atomic usage reservation RPC mapping and limit denial responses.
+- [x] Webhook helper tests for configured price normalization, event dedupe, failed-event retry, and missing trusted workspace metadata.
+- [x] Route/e2e tests for missing, invalid, and valid signed webhook requests.
+- [x] E2E verifies owner billing page and non-owner management denial.
+- [x] E2E verifies limit-exceeded channel creation is blocked server-side.
+- [x] E2E verifies public chat behavior when workspace usage is over limit.
+- [x] E2E verifies anonymous and outsider billing/usage reads are isolated.
+- [x] E2E verifies authenticated users cannot forge usage events, billing customers, or subscription status changes.
+- [x] Existing Phase 1-7 e2e coverage still passes.
+- [x] `npm run lint`.
+- [x] `npm run typecheck`.
+- [x] `npm run test` (12 files, 57 tests).
+- [x] `npm run build`.
+- [x] `npm run test:bundle-secrets`.
+- [x] `npm run test:e2e` (10 Chromium tests across Phases 1-8).
+- [x] Fresh Vercel preview deployed and inspected: https://realestatechatbot-qnnce8o3f-dhakalasaces-projects.vercel.app.
+- [x] Vercel authenticated curl verified `/` and `/c/sarah-patel` on the preview.
+- [x] Autonomous/sub-agent product and security reviews completed; blockers were fixed before marking Phase 8 implementation complete.
+
+Need from user before real Stripe checkout/webhook activation:
+
+- [ ] Stripe test secret key.
+- [ ] Stripe test publishable key.
+- [ ] Stripe webhook signing secret for the Vercel preview endpoint or Stripe CLI forwarding.
+- [ ] Initial plan names, monthly prices, and limits.
+- [ ] Stripe test price IDs for the selected plans, or approval for Codex to create them in Stripe test mode after account access is configured.
+- [ ] Trial policy, if any.
+- [ ] Decision for `past_due` behavior: grace period, block AI only, or block new public chat/paid actions.
+- [ ] Final billing and limit-message copy before production payment launch.
+
+Explicitly out of scope for Phase 8:
+
+- [x] Production payment launch without user approval remains out of scope.
+- [x] Usage-based Stripe metered billing remains out of scope.
+- [x] Coupons, discounts, affiliates, reseller billing, multi-currency pricing, tax automation, refunds, or brokerage invoicing remain out of scope.
+- [x] Public pricing/SEO pages beyond minimal dashboard billing UI remain out of scope.
+- [x] Internal admin billing console remains out of scope.
+- [x] SMS/WhatsApp, MLS/IDX, or Phase 10 launch-hardening work remains out of scope unless directly needed for billing safety.
+
+Phase 8 status: implementation complete by automated checks, browser verification, Vercel preview smoke, and sub-agent review. Real Stripe checkout/portal/payment activation is intentionally gated on Stripe test credentials, test price IDs, and pricing decisions.
 
 ## Phase 9: SEO and Product-Led Acquisition
 
 Goal: build useful SEO/product pages after the product is real.
 
-- [ ] Polish homepage as canonical money page.
-- [ ] Add metadata and canonical tags.
-- [ ] Add OG image strategy.
-- [ ] Add SoftwareApplication schema.
-- [ ] Add FAQ schema where appropriate.
-- [ ] `/tools/real-estate-chatbot-template-generator`
-- [ ] `/examples/real-estate-chatbot-examples`
-- [ ] `/guides/how-to-build-a-real-estate-chatbot`
-- [ ] `/guides/real-estate-lead-capture`
-- [ ] `/use-cases/home-valuation-chatbot`
-- [ ] `/use-cases/open-house-chatbot`
-- [ ] `/use-cases/property-recommendation-chatbot`
-- [ ] `/best-real-estate-chatbots`
-- [ ] Sitemap and robots.
-- [ ] No duplicate synonym pages.
-- [ ] User reviews SEO pages and product CTAs.
+- [x] Polish homepage as canonical money page.
+- [x] Add metadata and canonical tags.
+- [x] Add OG image strategy.
+- [x] Add SoftwareApplication schema.
+- [x] Add FAQ schema where appropriate.
+- [x] `/tools/real-estate-chatbot-template-generator`.
+- [x] `/examples/real-estate-chatbot-examples`.
+- [x] `/guides/how-to-build-a-real-estate-chatbot`.
+- [x] `/guides/real-estate-lead-capture`.
+- [x] `/use-cases/home-valuation-chatbot`.
+- [x] `/use-cases/open-house-chatbot`.
+- [x] `/use-cases/property-recommendation-chatbot`.
+- [x] `/best-real-estate-chatbots`.
+- [x] Sitemap and robots.
+- [x] No duplicate synonym pages.
+- [x] User review gate replaced by autonomous/browser/sub-agent review per current operating mode.
 
-Phase 9 status: pending.
+Phase 9 verification evidence on AWS, 2026-06-16:
+
+- [x] Homepage now owns the main money-page cluster for "AI real estate chatbot" and focuses on lead capture, channel attribution, appointments, follow-ups, team routing, and billing-aware limits.
+- [x] Supporting pages target distinct intents: interactive tool, examples, build guide, lead-capture guide, seller valuation, open house, property recommendation, and comparison framework.
+- [x] Root layout adds metadata base, canonical defaults, Open Graph metadata, Twitter metadata, and title template.
+- [x] Individual SEO pages use page-specific metadata and canonical URLs.
+- [x] `src/app/opengraph-image.tsx` generates a product-preview OG image.
+- [x] Homepage emits `SoftwareApplication`, `WebPage`, and `FAQPage` JSON-LD.
+- [x] Supporting SEO pages emit `WebPage` and `FAQPage` JSON-LD.
+- [x] `src/app/sitemap.ts` includes homepage plus all Phase 9 SEO pages and excludes customer bot pages.
+- [x] `src/app/robots.ts` allows public marketing pages and disallows private/app utility routes.
+- [x] Existing `/c/[slug]` and `/embed/[channelKey]` noindex metadata remains in place for customer bot/embed surfaces.
+- [x] Unit coverage added in `src/lib/marketing.test.ts` for required routes, unique intents, FAQ schema, and JSON-LD escaping.
+- [x] Playwright coverage added in `tests/e2e/phase9-seo.spec.ts` for homepage metadata/schema/CTA, all required SEO routes, template generator behavior, sitemap/robots, and hosted bot noindex behavior.
+- [x] Sub-agent SEO/product audits were reconciled against AWS source of truth; sub-agents could not directly mount `/home/ec2-user/realestatechatbot.ai`, so main-agent SSH inspection is authoritative.
+- [x] Targeted checks passed before full gate: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`, and `npx playwright test tests/e2e/phase9-seo.spec.ts`.
+- [x] Full regression passed on AWS after closeout hardening: `npm run lint`, `npm run typecheck`, `npm run test` (13 files, 63 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (14 Chromium tests).
+- [x] Playwright e2e now builds and runs against production `next start` instead of `next dev` to avoid Turbopack dev-server instability during full regression.
+- [x] Fresh Phase 9 preview deployed: `https://realestatechatbot-gbomiktfq-dhakalasaces-projects.vercel.app`.
+- [x] Vercel inspect status: Ready; authenticated `vercel curl` verified homepage/subpage metadata, robots, sitemap, OG image PNG headers, and `/c/sarah-patel` noindex behavior; recent error-log scan returned no logs.
+- [x] In-app Browser attempted the protected preview and hit Vercel login. Authenticated Vercel CLI live checks plus Playwright browser tests are authoritative for this protected deployment.
+
+Phase 9 status: complete by autonomous/browser/sub-agent review on AWS. Production promotion is not done.
 
 ## Phase 10: Hardening and Launch Readiness
 
 Goal: make the app safe and solid enough for real agents.
 
-- [ ] Rate limiting on public chat endpoints.
-- [ ] Spam/abuse detection.
-- [ ] Error logging.
-- [ ] Vercel observability review.
-- [ ] Audit log review UI.
-- [ ] Internal admin dashboard.
-- [ ] Lead export.
-- [ ] Privacy policy.
-- [ ] Terms.
-- [ ] Acceptable use policy.
-- [ ] AI disclaimer.
-- [ ] Accessibility pass.
-- [ ] Performance pass.
-- [ ] Security checklist.
-- [ ] AI eval regression suite.
-- [ ] Rotate OpenAI key before public launch.
-- [ ] User reviews launch checklist.
+- [x] Rate limiting on public chat endpoints: Supabase-backed shared RPC buckets now guard `/api/chat` plus lightweight local buckets; `/widget.js` token issuance is also rate-limited.
+- [x] Spam/abuse detection: public chat blocks oversized raw request bodies before JSON parsing and blocks link floods, unsafe markup, repeated characters, spam phrases, and prompt/secret extraction before channel resolution, sessions, usage, AI, messages, or leads are created.
+- [x] Error logging: public chat and widget issuance emit structured JSON logs with request IDs, route, status, duration, sanitized errors, rate-limit blocks, and abuse blocks.
+- [x] Vercel observability review: current closeout uses Vercel inspect/log checks; account-level log drains, Web Analytics, Speed Insights, or external monitoring remain a launch preference/gate.
+- [x] Audit log review UI: `/dashboard/audit` and `/dashboard/admin` expose owner/admin-only audit and abuse review surfaces.
+- [x] Internal admin dashboard: `/dashboard/admin` provides workspace-scoped launch readiness, audit, abuse, usage, notification health review, and all documented external launch gates.
+- [x] Lead export: `/dashboard/leads/export` is owner/admin-only, capped, CSV-injection hardened, filter-aware, and audit-logged.
+- [x] Privacy policy: `/privacy` added and linked.
+- [x] Terms: `/terms` added and linked.
+- [x] Acceptable use policy: `/acceptable-use` added and linked.
+- [x] AI disclaimer: `/ai-disclaimer` added and linked; hosted/widget chat shows visible AI/professional-advice disclaimer copy.
+- [x] Accessibility pass: dashboard nav has an aria label, chat input has a real label, chat updates are `aria-live`, and Phase 10 browser smoke verifies the public chat disclaimer path. Full axe/Lighthouse CI is deferred until we choose that dependency/tooling.
+- [x] Performance pass: disk headroom restored before heavy runs, production `next build` passed, e2e runs against production `next start`, and generated `.next` output remains small. Full Lighthouse budgets are deferred.
+- [x] Security checklist: `SECURITY_CHECKLIST.md` documents RLS, public surface, secrets, AI safety, dependency-audit status, and external launch gates.
+- [x] AI eval regression suite: `src/lib/chat/evals.test.ts` covers legal/tax/mortgage/fair-housing/property-fact safety, state freeze, and prompt redaction.
+- [ ] Rotate OpenAI key before public launch. External secret-rotation gate; do only with explicit approval.
+- [x] Launch-hardening review completed by automated AWS checks, Vercel preview smoke, and sub-agent review. Routine manual acceptance gates are removed by user instruction.
 
-Phase 10 status: pending.
+Phase 10 status: complete by automated/browser/sub-agent review on AWS; latest branch preview alias is `https://realestatechatbot-ai-git-phase-1-h-31b7fe-dhakalasaces-projects.vercel.app`. Production promotion is not done.
 
 ## Current Next Step
 
-Start Phase 1.
+No Phase 11 is documented yet. Next work is either external launch-gate setup or a separately planned next phase. Keep production promotion, real payments, OpenAI key rotation, destructive external actions, and irreversible account changes behind explicit approval.
 
-Recommended first implementation slice:
+Current engineering status:
 
 ```text
-Supabase schema + auth + protected dashboard shell + workspace bootstrap
+Phases 0-10 implementation are complete through automated AWS checks, Playwright, Vercel preview smoke, and sub-agent review. Stripe activation, real email delivery, domain attachment, observability/log-drain choice, formal legal/compliance finalization, production promotion, and OpenAI key rotation remain external gates.
 ```
 
-Then:
+Human gate:
 
 ```text
-agent profile + bot config + hosted deterministic chat + lead inbox
+Manual acceptance gates are removed for routine development by user instruction. Continue phase-by-phase with automated, browser, and sub-agent review; stop only for credentials, money, production promotion, secret rotation, destructive or irreversible external actions, or if the user explicitly reinstates a review gate.
+```
+
+
+## Auth Pivot Addendum (2026-06-10)
+
+Goal: replace fragile Supabase magic-link login with email/password plus Google OAuth.
+
+- [x] Remove magic-link login UI.
+- [x] Add email/password sign in and account creation.
+- [x] Add Google OAuth button in the login UI.
+- [x] Use Supabase server callback for Google OAuth code exchange.
+- [x] Configure Supabase password auth for Phase 1: signups enabled, email auto-confirm enabled, password minimum 8 characters.
+- [x] Create Google Cloud OAuth Web Client.
+- [x] Configure Supabase Google provider with Google Client ID and Client Secret.
+- [x] Add exact Google JavaScript origins for production and the then-current review preview.
+- [x] Deploy preview and manually test email/password and Google sign-in.
+
+Google OAuth values to configure before testing Google sign-in on a preview:
+
+```txt
+Authorized redirect URI:
+https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback
+
+Authorized JavaScript origins:
+https://realestatechatbot-ai.vercel.app
+https://<active-review-preview>.vercel.app
 ```

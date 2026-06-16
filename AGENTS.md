@@ -42,8 +42,10 @@ Every feature should include:
 - dev: `npm run dev`
 - build: `npm run build`
 - lint: `npm run lint`
-- test: add when the test runner is installed
-- test:e2e: add when Playwright is installed
+- typecheck: `npm run typecheck`
+- test: `npm test`
+- test:e2e: `npm run test:e2e`
+- bundle secret scan: `npm run test:bundle-secrets`
 
 ## Product Constraints
 
@@ -66,7 +68,7 @@ Every feature should include:
 - Build passes.
 - Lint passes.
 - Relevant tests pass.
-- Main user flow works manually.
+- Main user flow works through browser/autonomous QA.
 - Loading, empty, error, and success states exist.
 - Mobile layout works.
 - No console errors.

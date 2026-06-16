@@ -1,0 +1,72 @@
+import Link from "next/link";
+import { signOut } from "@/app/dashboard/actions";
+import { requireUser } from "@/lib/auth";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await requireUser();
+  const supabase = await createServerSupabaseClient();
+  const { data: membership } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ role: string }>();
+  const canAccessAdmin = membership?.role === "owner" || membership?.role === "admin";
+
+  return (
+    <div className="min-h-screen bg-[#f5f7f2] text-[#162018]">
+      <header className="border-b border-[#d9ded2] bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <Link className="text-lg font-semibold" href="/dashboard">
+              RealEstateChatbot.ai
+            </Link>
+            <p className="text-sm text-[#657064]">{user.email}</p>
+          </div>
+          <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Dashboard navigation">
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard">
+              Overview
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/leads">
+              Leads
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/appointments">
+              Appointments
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/channels">
+              Channels
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/properties">
+              Properties
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/knowledge">
+              Knowledge
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/team">
+              Team
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/follow-ups">
+              Follow-ups
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/billing">
+              Billing
+            </Link>
+            {canAccessAdmin ? (
+              <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/admin">
+                Admin
+              </Link>
+            ) : null}
+            <form action={signOut}>
+              <button className="rounded-md bg-[#162018] px-3 py-2 font-medium text-white hover:bg-[#2d392f]" type="submit">
+                Sign out
+              </button>
+            </form>
+          </nav>
+        </div>
+      </header>
+      {children}
+    </div>
+  );
+}

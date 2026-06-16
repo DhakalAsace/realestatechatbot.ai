@@ -68,7 +68,7 @@ Every feature should include:
 - Build passes.
 - Lint passes.
 - Relevant tests pass.
-- Main user flow works manually.
+- Main user flow works through browser/autonomous QA.
 - Loading, empty, error, and success states exist.
 - Mobile layout works.
 - No console errors.

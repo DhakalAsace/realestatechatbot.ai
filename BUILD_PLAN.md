@@ -18,31 +18,31 @@ agent creates a bot -> visitor completes hosted buyer/seller chat -> lead appear
 
 For every phase:
 
-- [ ] Codex confirms the exact scope from the source-of-truth docs before building.
-- [ ] Codex builds on the AWS dev box only.
-- [ ] Codex updates this checklist as work progresses.
-- [ ] Codex updates `PROJECT_CONTEXT.md` with decisions, credentials status, environment notes, and verification results.
-- [ ] Codex runs relevant automated checks.
-- [ ] Codex uses browser QA and sub-agent/review passes for important product, security, and deployment checks.
-- [ ] Codex deploys to Vercel when the phase is ready for preview verification.
-- [ ] Codex fixes review findings before advancing.
-- [ ] Phase is marked complete only after automated checks, browser/deploy verification, and autonomous/sub-agent review are acceptable.
-- [ ] Stop and ask the user only for credentials, payment, production promotion, secret rotation, destructive external actions, or irreversible account-level changes.
+- [x] Codex confirms the exact scope from the source-of-truth docs before building.
+- [x] Codex builds on the AWS dev box only.
+- [x] Codex updates this checklist as work progresses.
+- [x] Codex updates `PROJECT_CONTEXT.md` with decisions, credentials status, environment notes, and verification results.
+- [x] Codex runs relevant automated checks.
+- [x] Codex uses browser QA and sub-agent/review passes for important product, security, and deployment checks.
+- [x] Codex deploys to Vercel when the phase is ready for preview verification.
+- [x] Codex fixes review findings before advancing.
+- [x] Phase is marked complete only after automated checks, browser/deploy verification, and autonomous/sub-agent review are acceptable.
+- [x] Stop and ask the user only for credentials, payment, production promotion, secret rotation, destructive external actions, or irreversible account-level changes.
 
 ## Always-On Constraints
 
-- [ ] Work happens on AWS in `/home/ec2-user/realestatechatbot.ai`.
-- [ ] Use only GitHub repo `DhakalAsace/realestatechatbot.ai`.
-- [ ] Use only Supabase project ref `dwvkmxtumugvgytmlbsk`.
-- [ ] Use Vercel only from this project directory.
-- [ ] Do not commit secrets.
-- [ ] Do not expose service-role keys to the browser.
-- [ ] Keep RLS and server-side authorization central.
-- [ ] Do not build MLS/IDX in v1.
-- [ ] Do not build SMS/WhatsApp before consent/opt-out design.
-- [ ] Do not add Stripe before the core product loop works.
-- [ ] AI must not invent property facts.
-- [ ] AI must not provide legal, tax, mortgage, or financial advice.
+- [x] Work happens on AWS in `/home/ec2-user/realestatechatbot.ai`.
+- [x] Use only GitHub repo `DhakalAsace/realestatechatbot.ai`.
+- [x] Use only Supabase project ref `dwvkmxtumugvgytmlbsk`.
+- [x] Use Vercel only from this project directory.
+- [x] Do not commit secrets.
+- [x] Do not expose service-role keys to the browser.
+- [x] Keep RLS and server-side authorization central.
+- [x] Do not build MLS/IDX in v1.
+- [x] Do not build SMS/WhatsApp before consent/opt-out design.
+- [x] Do not add Stripe before the core product loop works.
+- [x] AI must not invent property facts.
+- [x] AI must not provide legal, tax, mortgage, or financial advice.
 
 ## Phase 0: Foundation
 
@@ -234,15 +234,15 @@ Detailed plan: `PHASE_2_PLAN.md`.
 Review URL: https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app
 
 - [x] Preview deployed and inspected via Vercel CLI; Vercel protection noted for human access.
-- [ ] Sign in and open `/dashboard/channels`.
-- [ ] Create or open a campaign channel link and complete a buyer flow.
-- [ ] Confirm the lead inbox/detail shows source, channel, transcript, score, and UTM attribution.
-- [ ] Create a website widget channel with the test site origin in allowed origins.
-- [ ] Copy the widget snippet and confirm launcher color follows the bot brand color.
-- [ ] Complete a seller flow through the widget and confirm source attribution is `web_embed`.
-- [ ] Create a QR channel, copy/download the SVG, and open the QR target URL.
-- [ ] Disable a channel and confirm its public chat entry no longer accepts messages.
-- [ ] Confirm source/channel filters isolate the expected leads.
+- [x] Sign in and open `/dashboard/channels` covered by Playwright/autonomous review.
+- [x] Campaign channel link buyer flow covered by Playwright/autonomous review.
+- [x] Lead inbox/detail source, channel, transcript, score, and UTM attribution covered by Playwright/autonomous review.
+- [x] Website widget channel with test allowed origin covered by Playwright/autonomous review.
+- [x] Widget snippet and brand-color launcher covered by Playwright/autonomous review.
+- [x] Widget seller flow and `web_embed` attribution covered by Playwright/autonomous review.
+- [x] QR channel SVG generation/download target behavior covered by Playwright/autonomous review.
+- [x] Disabled channel public rejection covered by Playwright/autonomous review.
+- [x] Source/channel filters covered by Playwright/autonomous review.
 - [x] Manual acceptance gate removed by user; continue using autonomous/sub-agent reviews unless a risky external action needs approval.
 
 Need from user before/during Phase 2:
@@ -642,7 +642,7 @@ Goal: make the app safe and solid enough for real agents.
 - [ ] Rotate OpenAI key before public launch. External secret-rotation gate; do only with explicit approval.
 - [x] Launch-hardening review completed by automated AWS checks, Vercel preview smoke, and sub-agent review. Routine manual acceptance gates are removed by user instruction.
 
-Phase 10 status: complete by automated/browser/sub-agent review on AWS; latest preview deployed at `https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app`. Production promotion is not done.
+Phase 10 status: complete by automated/browser/sub-agent review on AWS; latest preview deployed at `https://realestatechatbot-36rr7gnyt-dhakalasaces-projects.vercel.app`. Production promotion is not done.
 
 ## Current Next Step
 

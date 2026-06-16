@@ -246,7 +246,7 @@ Done when:
 Done when:
 
 - `/widget.js` issues signed tokens only to allowed origins.
-- browser e2e verifies launcher/iframe rendering from an allowed local origin; preview manual review verifies a true external site origin.
+- browser e2e verifies launcher/iframe rendering from an allowed local origin; true external-site origin smoke is optional before public launch if preview protection blocks it.
 - visitor completes buyer/seller flow inside widget.
 - lead source shows `web_embed`.
 - wrong/disabled channel fails safely.
@@ -310,7 +310,7 @@ Security acceptance:
 - lead rows cannot be reassigned to another workspace/bot channel.
 - browser bundle contains no service role, OpenAI, or database secrets.
 
-Manual review:
+Optional human review retained for reference; Phase 2 completion uses automated/browser/sub-agent review:
 
 1. Create campaign link.
 2. Open campaign link in incognito.
@@ -348,4 +348,4 @@ Before or during build:
 4. Channel manager dashboard.
 5. Widget loader and embed page.
 6. QR generation.
-7. Playwright e2e and manual review.
+7. Playwright e2e and autonomous/sub-agent review.

@@ -15,6 +15,7 @@ Phase 10 launch-hardening checklist for RealEstateChatbot.ai.
 
 - Public chat validates payload shape, slug/channel status, widget tokens, active bots, source origin, and session ownership.
 - Public chat has durable database-backed rate limits plus in-process burst protection.
+- Auth callback and confirm redirects only allow dashboard-relative `next` destinations.
 - Public chat rejects spam, prompt-extraction, unsafe markup, control characters, link floods, and oversized payloads.
 - Public hosted bot and embed pages remain `noindex`.
 - Public legal/disclaimer pages are present: Privacy, Terms, Acceptable Use, and AI Disclaimer.

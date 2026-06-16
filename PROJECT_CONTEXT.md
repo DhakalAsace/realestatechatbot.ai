@@ -22,7 +22,7 @@ No Phase 11 is documented yet. Continue only with external launch-gate setup or 
 Latest verified preview:
 
 ```text
-https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app
+https://realestatechatbot-36rr7gnyt-dhakalasaces-projects.vercel.app
 ```
 
 ## Development Rules
@@ -45,7 +45,7 @@ https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app
 - No Agents SDK in v1
 - No MLS/IDX in v1
 - No SMS/WhatsApp in v1
-- Stripe after product value is proven
+- Stripe production activation after product value is proven
 
 ## Milestones
 
@@ -184,7 +184,7 @@ https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app
 - Phase 1 implementation added Supabase migrations, SSR auth, protected dashboard, hosted `/c/[slug]` bot route, deterministic buyer/seller chat, lead scoring, transcript storage, and lead inbox/detail pages.
 - Supabase migration `202606100001_phase1_core.sql` was pushed to project `dwvkmxtumugvgytmlbsk`.
 - Supabase CLI verified all eight Phase 1 tables have RLS enabled: workspaces, workspace_members, agent_profiles, bots, bot_channels, conversations, messages, leads.
-- Vercel env vars were set for Production, Preview, and Development: Supabase URL, publishable key, server-only key, project ref, chat token secret. OpenAI key remains present but unused.
+- Vercel env vars were set for Production, Preview, and Development: Supabase URL, publishable key, server-only key, project ref, chat token secret. At Phase 1, the OpenAI key was configured for later use; Phase 3 later enabled opt-in AI runtime behind `bot.ai_enabled`.
 - The server-only Supabase key uses the project service_role-compatible key because the public chat ingestion route must bypass RLS on the server while never exposing that key to the browser.
 - Automated checks passed: `npm run test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 - Temporary end-to-end smoke test passed: disposable workspace/bot -> `POST /api/chat` buyer flow -> qualified lead -> 16 transcript messages -> cleanup.
@@ -297,11 +297,11 @@ Phase 3 automated/sub-agent review passed on AWS. AI-assisted replies are availa
 - Phase 10 added owner/admin-only lead CSV export at `/dashboard/leads/export` with status/channel/assignee filters, a 1000-row cap, CSV formula escaping, and audit logging.
 - Phase 10 added `/dashboard/admin` and `/dashboard/audit` for workspace-scoped launch readiness, audit review, abuse blocks, usage events, and notification health. Bulk export and audit/abuse review are owner/admin-only.
 - Phase 10 added `/privacy`, `/terms`, `/acceptable-use`, `/ai-disclaimer`, footer links, sitemap entries, and visible hosted/widget chat disclaimer copy. Chat input accessibility was improved with a real label and `aria-live` message updates.
-- Phase 10 security fix: auth callback `next` values now use `safeInternalPath`, rejecting protocol-relative URLs, absolute URLs, backslashes, and non-dashboard destinations.
+- Phase 10 security fix: auth callback and confirm `next` values now use `safeInternalPath`, rejecting protocol-relative URLs, absolute URLs, backslashes, and non-dashboard destinations.
 - Phase 10 audit coverage was expanded for bot, channel, property, knowledge, lead status, appointment status, billing checkout/portal, and profile create actions. Profile creation redirects now include the created profile id to avoid stale success state.
-- Phase 10 checks passed on AWS: `npm run typecheck`, `npm run lint`, `npm test` (18 files, 84 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (16 Chromium tests after adding viewer negative coverage).
+- Phase 10 checks passed on AWS: `npm run typecheck`, `npm run lint`, `npm test` (19 files, 88 tests after adding auth-confirm redirect coverage), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (16 Chromium tests after adding viewer negative coverage).
 - Supabase migration `202606160014_phase10_launch_hardening.sql` was pushed to project `dwvkmxtumugvgytmlbsk` with `npx supabase db push`.
-- Fresh Phase 10 preview deployed at https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated `vercel curl` verified `/privacy`, `/terms`, `/login`, and `/c/sarah-patel`; recent Vercel log scan showed only 200 responses for checked routes.
-- AWS disk cleanup before heavy Phase 10 verification removed generated `.next`, npm cache, and test reports. After build/e2e/deploy, root disk remained about 81% used with about 5.8 GB free.
+- Fresh Phase 10 preview deployed at https://realestatechatbot-36rr7gnyt-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated `vercel curl` verified `/privacy`, `/terms`, `/login`, `/c/sarah-patel`, and `/auth/confirm` fail-closed redirects.
+- AWS disk cleanup before heavy Phase 10 verification removed generated `.next`, npm cache, and test reports. After final build/e2e/deploy, root disk remained about 84% used with about 5.0 GB free.
 - `npm audit --omit=dev` still reports 2 moderate production advisories through Next's bundled PostCSS. Latest published `next` is already 16.2.9; npm's suggested force fix is a breaking downgrade to `next@9.3.3`, so this remains a launch watch item until a sane patched Next release is available.
 - Phase 10 is complete by automated/browser/sub-agent review. Production promotion, real payment activation, domain attachment, real email delivery, observability/log-drain setup, formal legal/compliance finalization, and OpenAI key rotation are not done.

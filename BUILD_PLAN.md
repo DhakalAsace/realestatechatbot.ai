@@ -625,11 +625,11 @@ Phase 9 status: complete by autonomous/browser/sub-agent review on AWS. Producti
 Goal: make the app safe and solid enough for real agents.
 
 - [x] Rate limiting on public chat endpoints: Supabase-backed shared RPC buckets now guard `/api/chat` plus lightweight local buckets; `/widget.js` token issuance is also rate-limited.
-- [x] Spam/abuse detection: public chat blocks oversized payloads, link floods, unsafe markup, repeated characters, spam phrases, and prompt/secret extraction before sessions, usage, AI, messages, or leads are created.
+- [x] Spam/abuse detection: public chat blocks oversized raw request bodies before JSON parsing and blocks link floods, unsafe markup, repeated characters, spam phrases, and prompt/secret extraction before channel resolution, sessions, usage, AI, messages, or leads are created.
 - [x] Error logging: public chat and widget issuance emit structured JSON logs with request IDs, route, status, duration, sanitized errors, rate-limit blocks, and abuse blocks.
 - [x] Vercel observability review: current closeout uses Vercel inspect/log checks; account-level log drains, Web Analytics, Speed Insights, or external monitoring remain a launch preference/gate.
 - [x] Audit log review UI: `/dashboard/audit` and `/dashboard/admin` expose owner/admin-only audit and abuse review surfaces.
-- [x] Internal admin dashboard: `/dashboard/admin` provides workspace-scoped launch readiness, audit, abuse, usage, and notification health review.
+- [x] Internal admin dashboard: `/dashboard/admin` provides workspace-scoped launch readiness, audit, abuse, usage, notification health review, and all documented external launch gates.
 - [x] Lead export: `/dashboard/leads/export` is owner/admin-only, capped, CSV-injection hardened, filter-aware, and audit-logged.
 - [x] Privacy policy: `/privacy` added and linked.
 - [x] Terms: `/terms` added and linked.
@@ -642,7 +642,7 @@ Goal: make the app safe and solid enough for real agents.
 - [ ] Rotate OpenAI key before public launch. External secret-rotation gate; do only with explicit approval.
 - [x] Launch-hardening review completed by automated AWS checks, Vercel preview smoke, and sub-agent review. Routine manual acceptance gates are removed by user instruction.
 
-Phase 10 status: complete by automated/browser/sub-agent review on AWS; latest preview deployed at `https://realestatechatbot-36rr7gnyt-dhakalasaces-projects.vercel.app`. Production promotion is not done.
+Phase 10 status: complete by automated/browser/sub-agent review on AWS; latest branch preview alias is `https://realestatechatbot-ai-git-phase-1-h-31b7fe-dhakalasaces-projects.vercel.app`. Production promotion is not done.
 
 ## Current Next Step
 

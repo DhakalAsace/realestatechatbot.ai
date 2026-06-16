@@ -159,14 +159,9 @@ async function seedLeadFollowUps(admin: AdminClient): Promise<ProcessStats> {
   if (activeSequences.length === 0) return stats;
 
   const sequenceIds = activeSequences.map((sequence) => sequence.id);
-  const { data: messages, error: messageError } = await admin
-    .from("follow_up_messages")
-    .select("id, workspace_id, sequence_id, step_index, delay_minutes, status, subject_template, body_template")
-    .eq("status", "active")
-    .in("sequence_id", sequenceIds)
-    .order("step_index", { ascending: true });
+  const { messages, error: messageError } = await loadActiveMessagesForSequences(admin, sequenceIds);
 
-  if (messageError) return withError(stats, `messages:${messageError.message}`);
+  if (messageError) return withError(stats, `messages:${messageError}`);
 
   const appointmentsByLead = new Map<string, AppointmentType[]>();
   for (const appointment of (appointments ?? []) as AppointmentRecord[]) {
@@ -174,7 +169,7 @@ async function seedLeadFollowUps(admin: AdminClient): Promise<ProcessStats> {
   }
 
   const firstMessageBySequence = new Map<string, MessageRecord>();
-  for (const message of (messages ?? []) as MessageRecord[]) {
+  for (const message of messages) {
     if (!firstMessageBySequence.has(message.sequence_id)) firstMessageBySequence.set(message.sequence_id, message);
   }
 
@@ -478,6 +473,32 @@ async function recordNotification(
 
   if (error) return { id: null, error: error.message };
   return { id: (data as { id: string } | null)?.id ?? null };
+}
+
+async function loadActiveMessagesForSequences(admin: AdminClient, sequenceIds: string[]) {
+  const messages: MessageRecord[] = [];
+
+  for (const batch of chunk(sequenceIds, 50)) {
+    const { data, error } = await admin
+      .from("follow_up_messages")
+      .select("id, workspace_id, sequence_id, step_index, delay_minutes, status, subject_template, body_template")
+      .eq("status", "active")
+      .in("sequence_id", batch)
+      .order("step_index", { ascending: true });
+
+    if (error) return { messages: [], error: error.message };
+    messages.push(...((data ?? []) as MessageRecord[]));
+  }
+
+  return { messages, error: null };
+}
+
+function chunk<T>(items: T[], size: number) {
+  const batches: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    batches.push(items.slice(index, index + size));
+  }
+  return batches;
 }
 
 async function updateState(admin: AdminClient, state: StateRecord, updates: Record<string, unknown>) {

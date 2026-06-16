@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkChatAbuse, checkContentLength, maxChatPayloadBytes } from "@/lib/abuse";
+import { checkChatAbuse, checkContentLength, maxChatPayloadBytes, readJsonWithByteLimit } from "@/lib/abuse";
 
 describe("chat abuse checks", () => {
   it("allows normal real estate lead messages", () => {
@@ -19,5 +19,24 @@ describe("chat abuse checks", () => {
   it("blocks oversized request payloads by content length", () => {
     expect(checkContentLength(String(maxChatPayloadBytes))).toEqual({ allowed: true });
     expect(checkContentLength(String(maxChatPayloadBytes + 1))).toMatchObject({ allowed: false, code: "oversized_payload", status: 413 });
+  });
+
+  it("reads valid JSON bodies within the byte limit", async () => {
+    const result = await readJsonWithByteLimit(new Request("https://app.example/api/chat", { method: "POST", body: JSON.stringify({ message: "buying" }) }));
+
+    expect(result).toEqual({ ok: true, value: { message: "buying" } });
+  });
+
+  it("returns null for malformed JSON so schema validation can reject it", async () => {
+    const result = await readJsonWithByteLimit(new Request("https://app.example/api/chat", { method: "POST", body: "{" }));
+
+    expect(result).toEqual({ ok: true, value: null });
+  });
+
+  it("blocks oversized raw bodies even when content-length is absent", async () => {
+    const body = JSON.stringify({ message: "x".repeat(maxChatPayloadBytes + 1) });
+    const result = await readJsonWithByteLimit(new Request("https://app.example/api/chat", { method: "POST", body }));
+
+    expect(result).toMatchObject({ ok: false, code: "oversized_payload", status: 413 });
   });
 });

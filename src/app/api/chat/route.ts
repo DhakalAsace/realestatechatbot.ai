@@ -18,7 +18,7 @@ import {
   type ChannelType,
 } from "@/lib/channels";
 import { sendAppointmentNotification, type AppointmentNotificationResult } from "@/lib/notifications";
-import { checkChatAbuse, checkContentLength } from "@/lib/abuse";
+import { checkChatAbuse, checkContentLength, readJsonWithByteLimit } from "@/lib/abuse";
 import { createRouteLogger, requestIdFromHeaders } from "@/lib/observability";
 import { checkRateLimit, reservePersistentRateLimit, type PersistentRateLimitClient } from "@/lib/rate-limit";
 import { createConversationSession, hashValue, parseConversationSession, verifyWidgetChannelToken } from "@/lib/security";
@@ -103,7 +103,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is too large." }, { status: contentLength.status });
   }
 
-  const parsed = requestSchema.safeParse(await safeJson(request));
+  const body = await readJsonWithByteLimit(request);
+  if (!body.ok) {
+    logger.warn("chat_payload_rejected", { reason: body.code });
+    logger.done(body.status);
+    return NextResponse.json({ error: "Message is too large." }, { status: body.status });
+  }
+
+  const parsed = requestSchema.safeParse(body.value);
 
   if (!parsed.success) {
     logger.warn("chat_payload_rejected", { reason: "schema", issueCount: parsed.error.issues.length });
@@ -390,14 +397,6 @@ async function recordAbuseEvent({
 
 function shouldMeterAiTurn(bot: BotRecord) {
   return Boolean(bot.ai_enabled && process.env.OPENAI_API_KEY && process.env.AI_CHAT_DISABLE_MODEL !== "1");
-}
-
-async function safeJson(request: Request) {
-  try {
-    return await request.json();
-  } catch {
-    return null;
-  }
 }
 
 async function resolveBotChannel({

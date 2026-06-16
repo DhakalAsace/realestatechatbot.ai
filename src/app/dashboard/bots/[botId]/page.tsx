@@ -10,12 +10,15 @@ type BotPageProps = {
 
 export default async function BotPage({ params, searchParams }: BotPageProps) {
   const [{ botId }, query] = await Promise.all([params, searchParams]);
-  const { workspace, bot } = await getBotForDashboard(botId);
+  const { workspace, bot, profile, agentProfiles } = await getBotForDashboard(botId);
 
   if (!workspace) redirect("/dashboard/onboarding");
   if (!bot) notFound();
 
   const brandColor = bot.theme?.brandColor ?? "#163f2f";
+  const calendarUrl = bot.appointment_config?.calendarUrl ?? "";
+  const assignedProfile = agentProfiles.find((agentProfile) => agentProfile.id === bot.agent_profile_id) ?? profile;
+  const agentCalendarUrl = assignedProfile?.calendar_url ?? "";
   const errorMessage = getBotErrorMessage(query.error);
 
   return (
@@ -46,7 +49,29 @@ export default async function BotPage({ params, searchParams }: BotPageProps) {
             <option value="archived">Archived</option>
           </select>
         </label>
+        <label>
+          <span className="mb-1 block text-sm font-medium">Assigned profile</span>
+          <select className="h-11 w-full rounded-md border border-[#cdd5c8] bg-white px-3" defaultValue={bot.agent_profile_id ?? ""} name="assignedProfileId">
+            <option value="">No routing profile</option>
+            {agentProfiles.filter((agentProfile) => agentProfile.status === "active").map((agentProfile) => (
+              <option key={agentProfile.id} value={agentProfile.id}>
+                {agentProfile.display_name} ({agentProfile.profile_type})
+              </option>
+            ))}
+          </select>
+        </label>
         <Field label="Brand color" name="brandColor" defaultValue={brandColor} type="color" />
+        <label className="flex items-start gap-3 rounded-md border border-[#d9ded2] bg-[#f8faf6] p-4 md:col-span-2">
+          <input className="mt-1 h-4 w-4 accent-[#173f2f]" defaultChecked={bot.ai_enabled} name="aiEnabled" type="checkbox" />
+          <span>
+            <span className="block text-sm font-semibold">AI-assisted replies</span>
+            <span className="mt-1 block text-sm leading-6 text-[#657064]">
+              OpenAI can polish the assistant reply while the app still controls lead fields, scoring, safety fallback, and persistence.
+            </span>
+          </span>
+        </label>
+        <Field label="Bot calendar URL" name="calendarUrl" defaultValue={calendarUrl} placeholder="https://calendly.com/..." required={false} />
+        <Field label="Agent fallback calendar URL" name="agentCalendarUrl" defaultValue={agentCalendarUrl} placeholder="https://calendly.com/..." required={false} />
         <label className="md:col-span-2">
           <span className="mb-1 block text-sm font-medium">Greeting</span>
           <textarea className="min-h-28 w-full rounded-md border border-[#cdd5c8] p-3" defaultValue={bot.greeting} name="greeting" required />
@@ -68,15 +93,16 @@ export default async function BotPage({ params, searchParams }: BotPageProps) {
 function getBotErrorMessage(error?: string) {
   if (!error) return null;
   if (error === "duplicate-slug") return "That hosted slug is already taken. Choose another slug and save again.";
+  if (error === "calendar") return "Could not save the calendar URL. Use a valid http or https link.";
 
   return "Could not save bot settings.";
 }
 
-function Field({ label, name, defaultValue, type = "text" }: { label: string; name: string; defaultValue: string; type?: string }) {
+function Field({ label, name, defaultValue, type = "text", placeholder, required = true }: { label: string; name: string; defaultValue: string; type?: string; placeholder?: string; required?: boolean }) {
   return (
     <label>
       <span className="mb-1 block text-sm font-medium">{label}</span>
-      <input className="h-11 w-full rounded-md border border-[#cdd5c8] px-3 outline-none focus:border-[#2861a8]" defaultValue={defaultValue} name={name} required type={type} />
+      <input className="h-11 w-full rounded-md border border-[#cdd5c8] px-3 outline-none focus:border-[#2861a8]" defaultValue={defaultValue} name={name} placeholder={placeholder} required={required} type={type} />
     </label>
   );
 }

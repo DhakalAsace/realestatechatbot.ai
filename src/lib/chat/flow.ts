@@ -1,3 +1,5 @@
+import { appointmentTypeLabel, detectAppointmentType, hasRequestedWindow } from "@/lib/appointments";
+import type { AppointmentType } from "@/lib/appointments";
 import type { ChatState, ChatTurnResult, LeadDraft, LeadIntent } from "@/lib/chat/types";
 import { classifyLead, scoreLead } from "@/lib/chat/scoring";
 
@@ -15,7 +17,7 @@ export function detectIntent(message: string): LeadIntent {
     return "seller";
   }
 
-  if (/\b(buy|buying|buyer|purchase|looking for|home under|condo|house|pre-approved|preapproved)\b/.test(text)) {
+  if (/\b(buy|buying|buyer|purchase|looking for|home under|condo|house|showing|tour|viewing|pre-approved|preapproved)\b/.test(text)) {
     return "buyer";
   }
 
@@ -106,13 +108,53 @@ function nextSellerQuestion(step: string) {
 
 function completeReply(lead: LeadDraft) {
   const contact = lead.email || lead.phone ? "with your contact details" : "with your details";
-  return `Perfect. I saved this ${lead.intent === "seller" ? "seller" : "buyer"} request ${contact}. The agent can review the transcript and follow up from the dashboard.`;
+  const appointmentPrompt =
+    lead.intent === "seller"
+      ? " You can also ask to request a seller valuation appointment with a preferred day and time."
+      : " You can also ask to request a buyer consultation or showing with a preferred day and time.";
+
+  return `Perfect. I saved this ${lead.intent === "seller" ? "seller" : "buyer"} request ${contact}. The agent can review the transcript and follow up from the dashboard.${appointmentPrompt}`;
+}
+
+export function questionForStep(step: ChatState["step"], intent: LeadIntent | undefined) {
+  if (step === "intent" || !step) {
+    return "I can help with buying or selling. Are you looking to buy a home or sell a property?";
+  }
+
+  if (intent === "seller" || step.startsWith("seller_")) {
+    return nextSellerQuestion(step);
+  }
+
+  return nextBuyerQuestion(step);
 }
 
 export function runChatTurn(previousState: ChatState | null | undefined, rawMessage: string): ChatTurnResult {
   const message = cleanText(rawMessage);
   let lead = captureCommon(previousState?.lead ?? {}, message);
   let step = previousState?.step ?? "intent";
+
+  if (step === "appointment_time") {
+    return completeAppointmentTimeStep(lead, previousState?.appointment?.type, previousState?.appointment?.initialRequest, message);
+  }
+
+  if (step === "done") {
+    const appointmentType = detectAppointmentType(message, lead);
+
+    if (appointmentType) {
+      return startOrCompleteAppointmentRequest(lead, appointmentType, message);
+    }
+
+    const score = scoreLead(lead);
+    const classified = classifyLead(score);
+    return {
+      reply: completeReply(lead),
+      state: { step: "done", lead },
+      lead,
+      completed: true,
+      score,
+      ...classified,
+    };
+  }
 
   if (step === "intent") {
     const intent = detectIntent(message);
@@ -183,6 +225,9 @@ export function runChatTurn(previousState: ChatState | null | undefined, rawMess
     step = "seller_valuation";
   } else if (step === "seller_valuation") {
     lead = { ...lead, wantsValuation: yesNo(message) ?? true };
+    if (lead.wantsValuation && hasRequestedWindow(message)) {
+      return completeAppointmentRequest(lead, "seller_valuation", message, "Requested from seller valuation prompt");
+    }
     step = "done";
   }
 
@@ -201,6 +246,53 @@ export function runChatTurn(previousState: ChatState | null | undefined, rawMess
     lead,
     completed,
     score,
+    ...classified,
+  };
+}
+
+function startOrCompleteAppointmentRequest(lead: LeadDraft, type: AppointmentType, message: string): ChatTurnResult {
+  if (!lead.email && !lead.phone) {
+    return replyAgain(lead, "done", "Please share an email or phone number before requesting an appointment.");
+  }
+
+  if (!hasRequestedWindow(message)) {
+    const score = scoreLead(lead);
+    const classified = classifyLead(score);
+    const label = appointmentTypeLabel(type);
+
+    return {
+      reply: `Sure. What day and time works best for the ${label}?`,
+      state: { step: "appointment_time", lead, appointment: { type, initialRequest: message } },
+      lead,
+      completed: true,
+      score,
+      ...classified,
+    };
+  }
+
+  return completeAppointmentRequest(lead, type, message);
+}
+
+function completeAppointmentTimeStep(lead: LeadDraft, type: AppointmentType | undefined, initialRequest: string | undefined, message: string): ChatTurnResult {
+  const resolvedType = type ?? detectAppointmentType(initialRequest ?? "", lead) ?? (lead.intent === "seller" ? "seller_valuation" : "buyer_consultation");
+  const notes = initialRequest && initialRequest !== message ? `Initial request: ${initialRequest}` : undefined;
+
+  return completeAppointmentRequest(lead, resolvedType, message, notes);
+}
+
+function completeAppointmentRequest(lead: LeadDraft, type: AppointmentType, requestedWindow: string, notes?: string): ChatTurnResult {
+  const score = scoreLead(lead);
+  const classified = classifyLead(score);
+  const label = appointmentTypeLabel(type);
+  const appointmentRequest = { type, requestedWindow, ...(notes ? { notes } : {}) };
+
+  return {
+    reply: `Got it. I saved the ${label} request for ${requestedWindow}. The agent can review it from the appointment dashboard and follow up.`,
+    state: { step: "done", lead },
+    lead,
+    completed: true,
+    score,
+    appointmentRequest,
     ...classified,
   };
 }

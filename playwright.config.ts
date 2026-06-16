@@ -18,8 +18,8 @@ export default defineConfig({
   webServer: hasExternalBaseUrl
     ? undefined
     : {
-        command: "npm run dev -- --hostname 127.0.0.1 --port 3100",
-        reuseExistingServer: !process.env.CI,
+        command: "RESEND_API_KEY= RESEND_FROM_EMAIL= FOLLOW_UP_EMAIL_ENABLED=0 CRON_SECRET=e2e-cron-secret AI_CHAT_DISABLE_MODEL=1 npm run dev -- --hostname 127.0.0.1 --port 3100",
+        reuseExistingServer: false,
         timeout: 120_000,
         url: "http://127.0.0.1:3100",
       },

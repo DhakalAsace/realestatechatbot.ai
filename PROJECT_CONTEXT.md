@@ -11,12 +11,18 @@
 
 ## Current Goal
 
-Phase 0 foundation and Phase 1 hosted chatbot loop are complete. The active planning file is `BUILD_PLAN.md`.
+Phase 0 foundation, Phase 1 hosted chatbot loop, Phase 2 channels, Phase 3 AI runtime, Phase 4 controlled properties/knowledge, Phase 5 appointment requests/notifications, and Phase 6 teams/brokerages are complete on AWS with automated/sub-agent review passing. Phase 7 email follow-up automation is implemented, hardened after sub-agent review, and passed the AWS verification gate. The active planning file is `BUILD_PLAN.md`.
 
-Next, build Phase 2:
+Current review target:
 
 ```text
-one bot can be shared through hosted links, website widgets, QR codes, social/campaign links -> source is tracked on conversations/leads
+Plan Phase 8 Billing and Usage Limits without starting implementation yet
+```
+
+Latest verified preview:
+
+```text
+https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app
 ```
 
 ## Development Rules
@@ -32,8 +38,9 @@ one bot can be shared through hosted links, website widgets, QR codes, social/ca
 - Next.js App Router hosted on Vercel
 - Supabase Auth, Postgres, RLS, and Storage
 - App-owned workflow state and authorization
-- OpenAI / Vercel AI SDK later, after the deterministic hosted chat loop works
-- Structured outputs and tool calling for AI runtime
+- OpenAI / Vercel AI SDK is active behind an opt-in `bot.ai_enabled` flag
+- Structured outputs for AI runtime
+- Controlled property/knowledge retrieval before AI reply generation
 - No Agents SDK in v1
 - No MLS/IDX in v1
 - No SMS/WhatsApp in v1
@@ -74,11 +81,42 @@ one bot can be shared through hosted links, website widgets, QR codes, social/ca
 ### Phase 3: AI Runtime
 
 - Structured output schema
-- Tool definitions
 - Deterministic validation
 - Safety rules
 - Eval fixtures
 - AI disabled fallback
+
+### Phase 4: Properties and Knowledge Base
+
+- Workspace-scoped properties and knowledge documents
+- RLS-protected dashboard CRUD
+- Server-only retrieval in `/api/chat`
+- Controlled property cards in chat
+- No-invention fallback for unavailable property facts
+- Anonymous, cross-tenant, archived-record, and browser e2e coverage
+
+### Phase 5: Appointment Requests and Notifications
+
+- Workspace-scoped appointment requests and notification outbox
+- Buyer consultation, seller valuation, and showing request capture
+- Calendar URL support from bot override or agent profile fallback
+- Appointment dashboard and lead detail appointment panel
+- Resend-ready notification helper with skipped/failed/sent state logging
+- Transactional chat, lead, appointment, and outbox persistence through server-side RPC
+- Anonymous, cross-tenant, notification-skip, and browser e2e coverage
+
+### Phase 6: Teams, Brokerages, and Agencies
+
+- Workspace settings dashboard
+- Copy-link workspace invitations
+- Owner/admin/agent/viewer roles
+- Multiple agent and team profiles
+- Bot assignment to agent/team profile
+- Lead assignment and team inbox filters
+- Appointment routing follows current lead assignment
+- Audit events for membership/profile/assignment changes
+- Owner-only owner role changes and locked last-owner guard
+- Read-only viewer UI plus RLS mutation denial coverage
 
 ## Decisions
 
@@ -106,7 +144,7 @@ one bot can be shared through hosted links, website widgets, QR codes, social/ca
 - `OPENAI_API_KEY` is stored in AWS `.env.local` and Vercel Production, Preview, and Development environment variables. Do not commit or print the value. Rotate before public launch.
 - `npm run lint` passed.
 - `npm run build` passed locally and on Vercel.
-- AWS disk cleanup removed regenerable caches and old generated artifacts (`node_modules`, `.next`, package caches) from previous project workspaces. Root volume is now about 62% used with about 12 GB free.
+- AWS disk cleanup removed regenerable caches and old generated artifacts (`node_modules`, `.next`, package caches) from previous project workspaces. Disk must still be watched during builds because the root volume is small.
 - `npm install` reports 2 moderate audit findings in generated dependencies. Review before launch-hardening.
 
 - Phase 1 implementation added Supabase migrations, SSR auth, protected dashboard, hosted `/c/[slug]` bot route, deterministic buyer/seller chat, lead scoring, transcript storage, and lead inbox/detail pages.
@@ -136,12 +174,57 @@ one bot can be shared through hosted links, website widgets, QR codes, social/ca
 - Browser-use verification through an SSH tunnel to the AWS production server completed buyer and seller flows against `/c/sarah-patel`; Supabase confirmed qualified/hot leads with transcript messages and score 100. Temporary browser test records were deleted.
 - Mobile smoke review passed at a 390px viewport for the hosted Sarah Patel bot: assistant content, buy button, and input rendered with no console errors.
 - Phase 1 is accepted as complete. Next phase is Phase 2: Widget, QR, and Channel Tracking.
+- Phase 2 plan was created in `PHASE_2_PLAN.md`. The core Phase 2 decisions are: use public channel keys instead of internal IDs, keep `bot_channels` as the channel source of truth, store normalized source fields for dashboard display, and build the website widget as an iframe-based embed for customer-site isolation.
+- Phase 2 implementation added migration `202606110003_phase2_channels.sql`, channel labels/source fields, conversation/lead attribution fields, a channel-aware `/api/chat`, `/dashboard/channels`, public `/widget.js`, compact `/embed/[channelKey]`, QR SVG generation, lead source filters, dashboard source counts, and source details on lead detail pages.
+- Phase 2 keeps public channel keys separate from private database IDs. Public hosted/campaign/social/QR URLs use `/c/[slug]?ch=[public_key]`; website snippets use `/widget.js?channel=[public_key]`; QR SVGs encode public channel URLs.
+- Phase 2 widget position is bottom-right, widget color inherits the bot brand color, QR output is SVG, and active website widget channels require at least one allowed origin; empty origins fail closed.
+- Supabase migration `202606110003_phase2_channels.sql` was pushed to project `dwvkmxtumugvgytmlbsk`.
+- Phase 2 initial automated checks passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, and `npm run test:e2e`.
+- Phase 2 closeout hardening added migration `202606150001_phase2_closeout_hardening.sql`: `record_chat_turn` RPC persists each chat turn transactionally and fails closed on Supabase write errors; lead/channel workspace integrity is enforced by trigger.
+- Widget origin restrictions now use server-issued signed widget tokens. `/widget.js` issues a short-lived token only for an allowed origin, `/embed/[channelKey]` requires that token, and `/api/chat` rejects widget messages without a valid matching token/source origin.
+- Hosted /c/[slug] pages parse UTM query params and pass attribution into chat. Widget launcher color inherits the bot brand color. QR SVG generation is authenticated and restricted to active qr_code channels for active bots.
+- Channel manager now has real copy/open/download UI for hosted/campaign/social/QR URLs, widget snippets, and QR SVGs.
+- Phase 2 Playwright coverage verifies Phase 1 regression paths plus campaign attribution, widget token allow/deny behavior, direct embed denial without token, local allowed-origin widget launcher/iframe rendering, embedded widget seller flow, QR SVG restrictions, disabled channel rejection, lead/channel integrity, lead source filters, and cross-tenant lead isolation.
+- Phase 2 closeout verification passed on AWS on 2026-06-16: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, and `npm run test:e2e`.
+- Phase 2 acceptance cleanup on 2026-06-16 restored disk headroom, removed `.codex-home/tmp`, added UTM term display on lead detail, made disabled channel cards stop promoting open/copy/download/QR actions, removed the six-channel lead filter cap, and updated stale `BUILD_PLAN.md` Current Next Step text.
+- Acceptance cleanup test evidence passed on AWS: npm run lint, npm run typecheck, npm run test (4 files, 15 tests), npm run build, npm run test:bundle-secrets, and npm run test:e2e (4 Chromium tests).
+- Expanded Phase 2 e2e evidence now covers lead detail term attribution, draft bot rejection, swapped slug/channel rejection, disabled channel inactive UI, empty widget-origin denial, active-bot QR restrictions, all-channel filters beyond six channels, widget token checks, lead/channel integrity, and stale dev server prevention.
+- Fresh acceptance cleanup preview deployed at https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. `vercel logs --since 15m` returned no runtime logs.
+- Disk cleanup removed generated build/test artifacts and regenerable npm/Puppeteer/pnpm caches while keeping project dependencies and Playwright browsers. After final cleanup, root disk was about 77% used with about 7.1 GB free.
+
+- 2026-06-16: User removed manual acceptance gates moving forward. Use automated checks, browser QA, and multiple sub-agent reviews as the acceptance gate; still stop for credentials, payment, production promotion, secret rotation, destructive actions, or irreversible external changes.
+- 2026-06-16: Phase 2 marked complete by autonomous/sub-agent review after lint, typecheck, unit tests, build, bundle-secret scan, e2e, Vercel preview deploy, inspect, logs check, docs cleanup, and disk cleanup.
+
+- 2026-06-16: Phase 3 AI runtime completed. Added `ai` and `@ai-sdk/openai`, migration `202606160001_phase3_ai_runtime.sql`, `bot.ai_enabled`, dashboard AI toggle, server-only AI reply enrichment, structured output schema, safety prompt, no-invention/legal/tax/mortgage/fair-housing fallback behavior, prompt contact redaction, deterministic state ownership, and bot-message AI metadata.
+- Phase 3 keeps OpenAI non-streaming for now so `/api/chat` only returns after the transactional `record_chat_turn` RPC succeeds. AI can only replace the natural-language reply and safety metadata; it cannot write lead fields, IDs, scores, status, workspace, bot, channel, or conversation data.
+- Phase 3 test evidence passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test` (5 files, 21 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (5 Chromium tests).
+- Phase 3 Supabase migration was pushed to project `dwvkmxtumugvgytmlbsk`. Fresh Phase 3 preview deployed at https://realestatechatbot-9lw7zff2r-dhakalasaces-projects.vercel.app; Vercel inspect status Ready; authenticated Vercel curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses.
+- 2026-06-16: Phase 4 Properties and Knowledge Base completed. Added migration `202606160002_phase4_properties_knowledge.sql`, RLS-protected `properties` and `knowledge_documents`, dashboard `/dashboard/properties` and `/dashboard/knowledge`, server-only retrieval inside `/api/chat`, controlled property cards in hosted/widget chat, AI grounding with property/knowledge context, archived-record exclusion, and no-invention fallback when no matching controlled property exists.
+- Phase 4 test evidence passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test` (6 files, 25 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (6 Chromium tests). Fresh Phase 4 preview deployed, inspected, and smoke-verified at https://realestatechatbot-mw0otco93-dhakalasaces-projects.vercel.app.
+- 2026-06-16: Phase 5 Appointment Requests and Notifications completed. Added migration `202606160003_phase5_appointments.sql`, RLS-protected `appointments` and `notification_events`, calendar URL support on agent profiles and bot appointment config, deterministic buyer consultation/seller valuation/showing request capture, transactional chat/lead/appointment/outbox RPC, Resend-ready notification helper, `/dashboard/appointments`, lead detail appointment panel, and bot settings calendar fields.
+- Phase 5 test evidence passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test` (8 files, 38 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (7 Chromium tests). Fresh Phase 5 preview deployed, inspected, and smoke-verified at https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app.
+- Real email delivery remains deferred until a Resend API key or preferred email provider plus sender domain/from-address decision is supplied. Missing credentials are recorded as skipped notifications and do not block lead or appointment creation.
+- 2026-06-16: Phase 6 Teams, Brokerages, and Agencies completed. Added migrations `202606160004_phase6_teams.sql`, `202606160005_phase6_routing_profiles.sql`, `202606160006_phase6_membership_hardening.sql`, and `202606160007_phase6_owner_and_appointment_routing.sql`; `/dashboard/team`; `/invite/[token]`; copy-link invites; owner/admin/agent/viewer roles; multiple agent/team profiles; bot assignment; lead assignment/team inbox filters; audit events; owner-only owner changes; locked last-owner guard; appointment routing from current assigned profile; and viewer read-only UI.
+- Phase 6 test evidence passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test` (8 files, 38 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (8 Chromium tests). Fresh Phase 6 preview deployed, inspected, and smoke-verified at https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app.
+- 2026-06-16: Phase 7 Email Follow-Up Automation implemented. Added follow-up sequence/message/state/preference tables, hashed-token unsubscribe, secured `/api/follow-ups/run`, Vercel cron config, dashboard `/dashboard/follow-ups`, lead-detail consent attestation/suppression, disabled-delivery logging, and Phase 7 e2e coverage.
+
+
+- Phase 7 hardening after sub-agent review: scheduler now fails closed if unsubscribe token persistence fails before send; notification event insert failures no longer mark delivery states complete/skipped/failed as if logged; missing explicit consent uses `pending_consent`; consent attestation metadata records actor, timestamp, and consent text version; dashboard copy now distinguishes disabled/missing/ready email delivery config.
+- Phase 7 test evidence passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test` (9 files, 45 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (9 Chromium tests).
+- Fresh Phase 7 preview deployed at https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated Vercel curl verified `/` Phase 7 review copy and `/c/sarah-patel` hosted assistant rendering; recent logs showed no runtime errors.
+- Real follow-up email delivery remains disabled unless `FOLLOW_UP_EMAIL_ENABLED=true` and provider env vars are configured. Before production promotion with cron enabled, set `CRON_SECRET` and finalize sender domain/from-address and consent wording.
+- Phase 7 is complete by autonomous/sub-agent review. Phase 8 Billing and Usage Limits is next for planning only.
 
 ## Open Questions
 
 - Which domain will be attached first: `realestatechatbot.ai`, a Vercel preview URL, or both?
 - Should the unused generated deploy key be removed, or kept as a fallback option?
+- Manual acceptance gates are removed by user instruction; continue with automated, browser, and sub-agent review unless a risky external action requires approval.
 
 ## Manual Test Log
 
 Phase 1 automated checks passed on AWS. Google sign-in was verified end-to-end on a review preview and the Sarah Patel hosted bot page loads at `/c/sarah-patel`. Browser buyer/seller lead-capture review passed, dashboard/lead transcript behavior passed through Playwright and browser+DB verification, and mobile hosted-bot smoke passed. Phase 1 is complete.
+
+Phase 2 acceptance cleanup automated review passed on AWS. The app can create campaign/widget/QR channels, generate public channel URLs/snippets/QR SVGs, enforce signed widget origin tokens, complete public hosted and embedded chat flows, persist source attribution including UTM term, hide/prominently inactivate disabled channel share actions, and keep all channel filters visible. Fresh Phase 2 preview deployed at https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app. Manual acceptance gate was removed by user instruction on 2026-06-16; Phase 2 is complete by autonomous/sub-agent review.
+
+Phase 3 automated/sub-agent review passed on AWS. AI-assisted replies are available behind the bot settings toggle, deterministic lead state remains the source of truth, safety fallbacks prevent legal/tax/mortgage/fair-housing/property-fact invention paths, and AI metadata is stored in bot message JSON. Phase 4 automated/sub-agent review also passed: dashboard property/knowledge CRUD, controlled retrieval, property cards, no-invention fallback, archived-record exclusion, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Phase 5 automated/sub-agent review passed: buyer consultation, seller valuation, showing request, appointment dashboard, lead detail panel, calendar URL, skipped notification logging, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Fresh Phase 5 preview deployed at https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app; inspect status Ready; authenticated Vercel curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses. Phase 6 automated/sub-agent review passed: workspace settings, copy-link invites, owner/admin/agent/viewer roles, team profiles, bot routing, team inbox filters, lead reassignment, appointment routing after reassignment, audit events, viewer read-only UI, anonymous denial, direct mutation denial, audit spoof denial, and last-owner guard are covered. Fresh Phase 6 preview deployed at https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app. Phase 7 is now complete; Phase 8 planning can begin.

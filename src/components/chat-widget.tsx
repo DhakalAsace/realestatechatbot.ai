@@ -1,20 +1,29 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import type { UTMInput } from "@/lib/channels";
+import type { PropertyCard } from "@/lib/chat/retrieval";
 
 type ChatMessage = {
   role: "visitor" | "bot";
   content: string;
+  propertyCards?: PropertyCard[];
 };
 
 type ChatWidgetProps = {
   slug: string;
+  channelKey?: string;
+  widgetToken?: string;
   botName: string;
   greeting: string;
   brandColor: string;
+  sourceUrl?: string;
+  referrer?: string;
+  utm?: UTMInput;
+  compact?: boolean;
 };
 
-export function ChatWidget({ slug, botName, greeting, brandColor }: ChatWidgetProps) {
+export function ChatWidget({ slug, channelKey, widgetToken, botName, greeting, brandColor, sourceUrl, referrer, utm, compact = false }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "bot", content: greeting }]);
   const [sessionId, setSessionId] = useState<string>();
   const [input, setInput] = useState("");
@@ -23,7 +32,8 @@ export function ChatWidget({ slug, botName, greeting, brandColor }: ChatWidgetPr
   const inputRef = useRef<HTMLInputElement>(null);
 
   const canSend = input.trim().length > 0 && !isSending;
-  const sourceUrl = useMemo(() => (typeof window === "undefined" ? undefined : window.location.href), []);
+  const resolvedSourceUrl = useMemo(() => sourceUrl ?? (typeof window === "undefined" ? undefined : window.location.href), [sourceUrl]);
+  const resolvedReferrer = useMemo(() => referrer ?? (typeof document === "undefined" ? undefined : document.referrer), [referrer]);
 
   async function sendMessage(messageOverride?: string) {
     const message = (messageOverride ?? input).trim();
@@ -38,16 +48,16 @@ export function ChatWidget({ slug, botName, greeting, brandColor }: ChatWidgetPr
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, sessionId, message, sourceUrl }),
+        body: JSON.stringify({ slug, channelKey, widgetToken, sessionId, message, sourceUrl: resolvedSourceUrl, referrer: resolvedReferrer, utm }),
       });
-      const data = (await response.json()) as { sessionId?: string; reply?: string; error?: string };
+      const data = (await response.json()) as { sessionId?: string; reply?: string; error?: string; propertyCards?: PropertyCard[] };
 
       if (!response.ok || !data.reply || !data.sessionId) {
         throw new Error(data.error ?? "Chat failed");
       }
 
       setSessionId(data.sessionId);
-      setMessages((current) => [...current, { role: "bot", content: data.reply ?? "Saved." }]);
+      setMessages((current) => [...current, { role: "bot", content: data.reply ?? "Saved.", propertyCards: data.propertyCards }]);
       inputRef.current?.focus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "The chat could not send. Please try again.");
@@ -57,7 +67,7 @@ export function ChatWidget({ slug, botName, greeting, brandColor }: ChatWidgetPr
   }
 
   return (
-    <section className="flex min-h-[calc(100vh-8rem)] flex-col rounded-lg border border-[#d9ded2] bg-white shadow-sm md:min-h-[680px]">
+    <section className={compact ? "flex h-screen min-h-[520px] flex-col bg-white" : "flex min-h-[calc(100vh-8rem)] flex-col rounded-lg border border-[#d9ded2] bg-white shadow-sm md:min-h-[680px]"}>
       <div className="flex items-center justify-between border-b border-[#e5e9df] px-4 py-3">
         <div>
           <h1 className="font-semibold">{botName}</h1>
@@ -77,6 +87,7 @@ export function ChatWidget({ slug, botName, greeting, brandColor }: ChatWidgetPr
           >
             <p className="mb-1 font-mono text-xs uppercase opacity-60">{message.role === "bot" ? "Assistant" : "You"}</p>
             <p className="text-sm leading-6">{message.content}</p>
+            {message.propertyCards?.length ? <PropertyCards cards={message.propertyCards} /> : null}
           </div>
         ))}
         {isSending ? <div className="max-w-[86%] rounded-lg bg-white px-4 py-3 text-sm text-[#657064] shadow-sm">Typing...</div> : null}
@@ -116,5 +127,30 @@ export function ChatWidget({ slug, botName, greeting, brandColor }: ChatWidgetPr
         </form>
       </div>
     </section>
+  );
+}
+
+function PropertyCards({ cards }: { cards: PropertyCard[] }) {
+  return (
+    <div className="mt-3 grid gap-2">
+      {cards.map((card) => (
+        <article className="rounded-md border border-[#d9ded2] bg-[#f7f9f4] p-3" key={card.id}>
+          <div className="flex gap-3">
+            {card.imageUrl ? <div aria-hidden className="h-16 w-20 rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${card.imageUrl})` }} /> : null}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold leading-5">{card.title}</p>
+              {card.priceLabel || card.location ? <p className="mt-1 text-xs leading-5 text-[#657064]">{[card.priceLabel, card.location].filter(Boolean).join(" ? ")}</p> : null}
+              {card.details ? <p className="text-xs leading-5 text-[#657064]">{card.details}</p> : null}
+            </div>
+          </div>
+          {card.description ? <p className="mt-2 text-xs leading-5 text-[#455247]">{card.description}</p> : null}
+          {card.listingUrl ? (
+            <a className="mt-2 inline-flex text-xs font-semibold text-[#2861a8]" href={card.listingUrl} rel="noreferrer" target="_blank">
+              Open listing
+            </a>
+          ) : null}
+        </article>
+      ))}
+    </div>
   );
 }

@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatWidget } from "@/components/chat-widget";
+import { isChannelType, isPublicChannelKey, type ChannelType, type UTMInput } from "@/lib/channels";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const metadata = {
+  robots: { index: false, follow: false },
+};
 
 type PublicBotPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 type PublicBot = {
@@ -18,6 +24,16 @@ type PublicBot = {
   theme: { brandColor?: string } | null;
 };
 
+type PublicChannel = {
+  id: string;
+  workspace_id: string;
+  bot_id: string;
+  type: ChannelType;
+  status: string;
+  public_key: string;
+  label: string;
+};
+
 type AgentProfile = {
   display_name: string;
   brokerage_name: string;
@@ -25,9 +41,10 @@ type AgentProfile = {
   brand_color: string;
 };
 
-export default async function PublicBotPage({ params }: PublicBotPageProps) {
-  const { slug } = await params;
-  const result = await loadPublicBot(slug);
+export default async function PublicBotPage({ params, searchParams }: PublicBotPageProps) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const channelKey = firstQueryValue(query.ch);
+  const result = await loadPublicBot(slug, channelKey);
 
   if (result.kind === "missing-env") {
     return (
@@ -45,7 +62,7 @@ export default async function PublicBotPage({ params }: PublicBotPageProps) {
     );
   }
 
-  if (!result.bot || result.bot.status !== "active") {
+  if (!result.bot || !result.channel || result.bot.status !== "active") {
     notFound();
   }
 
@@ -67,13 +84,37 @@ export default async function PublicBotPage({ params }: PublicBotPageProps) {
           </p>
         </aside>
 
-        <ChatWidget botName={result.bot.name} brandColor={brandColor} greeting={result.bot.greeting} slug={result.bot.slug} />
+        <ChatWidget
+          botName={result.bot.name}
+          brandColor={brandColor}
+          channelKey={result.channel.public_key}
+          greeting={result.bot.greeting}
+          slug={result.bot.slug}
+          utm={parseUtm(query)}
+        />
       </div>
     </main>
   );
 }
 
-async function loadPublicBot(slug: string): Promise<{ kind: "ok"; bot: PublicBot | null; profile: AgentProfile | null } | { kind: "missing-env" }> {
+function firstQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parseUtm(query: Record<string, string | string[] | undefined>): UTMInput {
+  return {
+    source: firstQueryValue(query.utm_source),
+    medium: firstQueryValue(query.utm_medium),
+    campaign: firstQueryValue(query.utm_campaign),
+    content: firstQueryValue(query.utm_content),
+    term: firstQueryValue(query.utm_term),
+  };
+}
+
+async function loadPublicBot(
+  slug: string,
+  channelKey?: string,
+): Promise<{ kind: "ok"; bot: PublicBot | null; channel: PublicChannel | null; profile: AgentProfile | null } | { kind: "missing-env" }> {
   let admin;
 
   try {
@@ -89,20 +130,24 @@ async function loadPublicBot(slug: string): Promise<{ kind: "ok"; bot: PublicBot
     .maybeSingle<PublicBot>();
 
   if (!bot || bot.status !== "active") {
-    return { kind: "ok", bot: null, profile: null };
+    return { kind: "ok", bot: null, channel: null, profile: null };
   }
 
-  const { data: channel } = await admin
+  const channelQuery = admin
     .from("bot_channels")
-    .select("id")
+    .select("id, workspace_id, bot_id, type, status, public_key, label")
     .eq("workspace_id", bot.workspace_id)
     .eq("bot_id", bot.id)
-    .eq("type", "hosted_link")
-    .eq("status", "active")
-    .maybeSingle();
+    .eq("status", "active");
 
-  if (!channel) {
-    return { kind: "ok", bot: null, profile: null };
+  const { data: channel } = channelKey
+    ? isPublicChannelKey(channelKey)
+      ? await channelQuery.eq("public_key", channelKey).maybeSingle<PublicChannel>()
+      : { data: null }
+    : await channelQuery.eq("type", "hosted_link").order("created_at", { ascending: true }).limit(1).maybeSingle<PublicChannel>();
+
+  if (!channel || !isChannelType(channel.type)) {
+    return { kind: "ok", bot: null, channel: null, profile: null };
   }
 
   const { data: profile } = bot.agent_profile_id
@@ -114,5 +159,5 @@ async function loadPublicBot(slug: string): Promise<{ kind: "ok"; bot: PublicBot
         .maybeSingle<AgentProfile>()
     : { data: null };
 
-  return { kind: "ok", bot, profile: profile ?? null };
+  return { kind: "ok", bot, channel, profile: profile ?? null };
 }

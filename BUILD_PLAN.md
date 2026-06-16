@@ -447,29 +447,128 @@ Need from user before real email delivery:
 
 Phase 7 status: complete by automated, browser, and sub-agent review. Fresh preview deployed, inspected, and smoke-verified at https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app.
 
-## Phase 8: Billing and Usage Limits
+## Phase 8: Billing, Entitlements, and Usage Limits
 
-Goal: monetize after the product loop works.
+Goal: add a test-mode billing spine after the product loop works, while keeping Supabase as the app entitlement source of truth.
 
-- [ ] Stripe products/prices.
-- [ ] `subscriptions` table.
-- [ ] `usage_events` table.
-- [ ] Checkout flow.
-- [ ] Customer portal link.
-- [ ] Stripe webhook verification.
-- [ ] Server-side plan limit enforcement.
-- [ ] Entitlement helper.
-- [ ] Billing page.
-- [ ] Usage meter.
-- [ ] Webhook tests.
-- [ ] User reviews subscribe, upgrade, limit, and cancel flows.
+Success path:
 
-Need from user:
+```text
+workspace owner opens Billing -> sees current plan and usage -> starts Stripe Checkout -> webhook normalizes subscription locally -> app enforces limits server-side -> owner can open Stripe Customer Portal
+```
 
-- [ ] Stripe account/test keys.
-- [ ] Final initial plan/pricing decision.
+Docs to follow during implementation:
 
-Phase 8 status: pending.
+- Stripe Checkout: https://docs.stripe.com/payments/checkout
+- Stripe subscription webhooks: https://docs.stripe.com/billing/subscriptions/webhooks
+- Stripe webhook signature verification: https://docs.stripe.com/webhooks
+- Stripe Customer Portal sessions: https://docs.stripe.com/api/customer_portal/sessions
+- Stripe idempotent requests: https://docs.stripe.com/api/idempotent_requests
+
+### Scope Decisions
+
+- [x] Phase 8 is entitlement-first billing, not only a Stripe Checkout button.
+- [x] Stripe handles payment collection, Checkout, Portal, invoices, and subscription lifecycle events.
+- [x] Supabase remains the source of truth for app entitlements, usage, RLS, and workspace authorization.
+- [x] Start with fixed plan limits and internal metering; do not build usage-based Stripe invoicing yet.
+- [x] Use Stripe test mode first. Production payment activation remains a separate user-approved step.
+- [x] Existing workspace data stays readable if billing is blocked; new paid/costly actions are restricted with clear copy.
+
+### Phase 8A: Data Model And RLS
+
+- [ ] Add `billing_customers` table scoped to workspace.
+- [ ] Add `subscriptions` table with normalized Stripe subscription state.
+- [ ] Add immutable `usage_events` table with idempotency keys.
+- [ ] Add monthly or daily `usage_rollups` table or query helper if needed for fast dashboard meters.
+- [ ] Add plan catalog in app code with Free/Starter/Pro-style plan keys, limits, and Stripe price env mapping.
+- [ ] Enable RLS on all billing/usage tables.
+- [ ] Members can read billing summary where appropriate; only owners/admins can manage billing.
+- [ ] No dashboard role can mutate usage ledger rows directly.
+- [ ] Webhook/server service-role paths are the only writers for Stripe-normalized subscription state.
+
+### Phase 8B: Stripe Integration
+
+- [ ] Add Stripe server SDK.
+- [ ] Add server-only Stripe client helper.
+- [ ] Add owner/admin-only Checkout action or route.
+- [ ] Checkout creates subscription sessions from server-known plan keys only.
+- [ ] Checkout does not trust client-supplied workspace IDs, prices, plan names, or customer IDs.
+- [ ] Add owner/admin-only Customer Portal action or route.
+- [ ] Add `/api/stripe/webhook` with raw request body signature verification.
+- [ ] Webhook dedupes Stripe event IDs before applying state changes.
+- [ ] Webhook handles at least `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, and relevant invoice/payment failure events.
+- [ ] Webhook persists normalized subscription status, period dates, cancel-at-period-end, Stripe customer ID, subscription ID, price ID, and plan key.
+- [ ] Invalid webhook signatures fail closed and are covered by tests.
+
+### Phase 8C: Entitlements And Limit Enforcement
+
+- [ ] Add server-only entitlement helper.
+- [ ] Add server-side limit checks for active bots.
+- [ ] Add server-side limit checks for channels.
+- [ ] Add server-side limit checks for team seats/invites.
+- [ ] Add server-side limit checks for properties and knowledge documents.
+- [ ] Add server-side monthly usage checks for public conversations or chat turns.
+- [ ] Add server-side AI usage checks before AI provider calls.
+- [ ] Add server-side follow-up email usage checks before scheduled sends.
+- [ ] Public chat fails closed or falls back safely when a workspace is over limit, without exposing billing internals to visitors.
+- [ ] Dashboard mutations return clear upgrade/limit messages.
+- [ ] Usage events are idempotent and recorded close to the action being metered.
+
+### Phase 8D: Billing Dashboard
+
+- [ ] Add `/dashboard/billing`.
+- [ ] Add billing nav item for owners/admins.
+- [ ] Show current plan, subscription status, renewal/period end, and cancel-at-period-end state.
+- [ ] Show plan comparison and upgrade/downgrade CTAs.
+- [ ] Show usage meters for the limits enforced in Phase 8.
+- [ ] Show disabled/missing Stripe environment state in preview/dev without breaking the dashboard.
+- [ ] Add Checkout button for configured test-mode plan prices.
+- [ ] Add Customer Portal link for workspaces with a Stripe customer.
+- [ ] Non-owner roles can see read-only usage/plan info or a restricted billing message, but cannot manage checkout/portal.
+
+### Phase 8E: Tests And Verification
+
+- [ ] Unit tests for plan catalog and entitlement decisions.
+- [ ] Unit tests for active/trialing/past_due/canceled/unpaid subscription states.
+- [ ] Unit tests for usage window and idempotency behavior.
+- [ ] Webhook fixture tests for valid signature, invalid signature, event dedupe, create/update/delete subscription events, and invoice failure behavior.
+- [ ] Route/action tests for owner/admin checkout and portal authorization.
+- [ ] E2E verifies owner/admin billing page and non-owner management denial.
+- [ ] E2E verifies limit-exceeded resource creation is blocked server-side.
+- [ ] E2E verifies public chat behavior when workspace usage is over limit.
+- [ ] E2E verifies cross-workspace billing and usage reads/mutations are denied.
+- [ ] Existing Phase 1-7 e2e coverage still passes.
+- [ ] `npm run lint`.
+- [ ] `npm run typecheck`.
+- [ ] `npm run test`.
+- [ ] `npm run build`.
+- [ ] `npm run test:bundle-secrets`.
+- [ ] `npm run test:e2e`.
+- [ ] Fresh Vercel preview deployed and inspected.
+- [ ] Vercel logs checked after smoke requests.
+- [ ] Autonomous/sub-agent product and security reviews completed before marking Phase 8 complete.
+
+Need from user before Stripe checkout/webhook activation:
+
+- [ ] Stripe test secret key.
+- [ ] Stripe test publishable key.
+- [ ] Stripe webhook signing secret for the Vercel preview endpoint or Stripe CLI forwarding.
+- [ ] Initial plan names, monthly prices, and limits.
+- [ ] Stripe test price IDs for the selected plans, or approval for Codex to create them in Stripe test mode after account access is configured.
+- [ ] Trial policy, if any.
+- [ ] Decision for `past_due` behavior: grace period, block AI only, or block new public chat/paid actions.
+- [ ] Final billing and limit-message copy before production payment launch.
+
+Explicitly out of scope for Phase 8:
+
+- [ ] Production payment launch without user approval.
+- [ ] Usage-based Stripe metered billing.
+- [ ] Coupons, discounts, affiliates, reseller billing, multi-currency pricing, tax automation, refunds, or brokerage invoicing.
+- [ ] Public pricing/SEO pages beyond minimal dashboard billing UI.
+- [ ] Internal admin billing console.
+- [ ] SMS/WhatsApp, MLS/IDX, or Phase 10 launch-hardening work unless directly needed for billing safety.
+
+Phase 8 status: planned. Implementation can start with entitlement/database/UI scaffolding, but real Stripe checkout and webhook activation require Stripe test credentials, test price IDs or permission to create them, and initial plan/limit decisions.
 
 ## Phase 9: SEO and Product-Led Acquisition
 
@@ -520,12 +619,12 @@ Phase 10 status: pending.
 
 ## Current Next Step
 
-Clean generated artifacts and start Phase 8 planning. Do not start Phase 8 implementation until its plan is reviewed against the source-of-truth docs.
+Start Phase 8 implementation only within the planned entitlement-first billing scope. Stop for Stripe credentials, test price creation, payment activation, production promotion, secret rotation, or irreversible account-level changes.
 
 Current engineering status:
 
 ```text
-Phases 0-6 are complete. Phase 7 email follow-up automation is complete with preview https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app; Phase 8 planning is next.
+Phases 0-7 are complete. Phase 8 Billing, Entitlements, and Usage Limits is planned; implementation is next once Stripe test-mode inputs are available or when starting non-Stripe entitlement scaffolding.
 ```
 
 Human gate:

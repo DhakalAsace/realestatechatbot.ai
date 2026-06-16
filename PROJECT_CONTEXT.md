@@ -11,12 +11,12 @@
 
 ## Current Goal
 
-Phase 0 foundation, Phase 1 hosted chatbot loop, Phase 2 channels, Phase 3 AI runtime, Phase 4 controlled properties/knowledge, Phase 5 appointment requests/notifications, and Phase 6 teams/brokerages are complete on AWS with automated/sub-agent review passing. Phase 7 email follow-up automation is implemented, hardened after sub-agent review, and passed the AWS verification gate. The active planning file is `BUILD_PLAN.md`.
+Phase 0 foundation, Phase 1 hosted chatbot loop, Phase 2 channels, Phase 3 AI runtime, Phase 4 controlled properties/knowledge, Phase 5 appointment requests/notifications, Phase 6 teams/brokerages, and Phase 7 email follow-up automation are complete on AWS with automated/sub-agent review passing. Phase 8 Billing, Entitlements, and Usage Limits is planned as an entitlement-first test-mode billing slice. The active planning file is `BUILD_PLAN.md`.
 
 Current review target:
 
 ```text
-Plan Phase 8 Billing and Usage Limits without starting implementation yet
+Start Phase 8 implementation only inside the planned entitlement-first billing scope, stopping for Stripe credentials, test price creation, payment activation, production promotion, secret rotation, or irreversible account-level changes
 ```
 
 Latest verified preview:
@@ -41,6 +41,7 @@ https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app
 - OpenAI / Vercel AI SDK is active behind an opt-in `bot.ai_enabled` flag
 - Structured outputs for AI runtime
 - Controlled property/knowledge retrieval before AI reply generation
+- Stripe test-mode billing is Phase 8; Supabase remains the app entitlement source of truth
 - No Agents SDK in v1
 - No MLS/IDX in v1
 - No SMS/WhatsApp in v1
@@ -213,13 +214,25 @@ https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app
 - Phase 7 test evidence passed on AWS: `npm run lint`, `npm run typecheck`, `npm run test` (9 files, 45 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (9 Chromium tests).
 - Fresh Phase 7 preview deployed at https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated Vercel curl verified `/` Phase 7 review copy and `/c/sarah-patel` hosted assistant rendering; recent logs showed no runtime errors.
 - Real follow-up email delivery remains disabled unless `FOLLOW_UP_EMAIL_ENABLED=true` and provider env vars are configured. Before production promotion with cron enabled, set `CRON_SECRET` and finalize sender domain/from-address and consent wording.
-- Phase 7 is complete by autonomous/sub-agent review. Phase 8 Billing and Usage Limits is next for planning only.
+- Phase 7 is complete by autonomous/sub-agent review.
+- 2026-06-16: Phase 7 product buildout through Phase 7 was committed and pushed to GitHub branch `phase-1-hosted-chatbot` as commit `ceeeae9`.
+- 2026-06-16: Phase 8 planning completed with two sub-agent reviews. Decision: build entitlement-first billing in Stripe test mode. Stripe handles Checkout, Portal, invoices, and subscription lifecycle events; Supabase remains the local entitlement/usage source of truth. Phase 8 starts with fixed plan limits, internal usage metering, server-side entitlement checks, webhook signature verification/idempotency, and a billing dashboard.
+- Phase 8 should not include production payment launch, usage-based Stripe metered billing, coupons/discounts/affiliates, reseller billing, multi-currency/tax/refund flows, public pricing SEO pages, or an internal admin billing console.
+- Phase 8 implementation can start with non-Stripe entitlement/database/UI scaffolding, but real checkout and webhook activation require Stripe test credentials, test price IDs or permission to create them, and initial plan/limit decisions.
 
 ## Open Questions
 
 - Which domain will be attached first: `realestatechatbot.ai`, a Vercel preview URL, or both?
 - Should the unused generated deploy key be removed, or kept as a fallback option?
 - Manual acceptance gates are removed by user instruction; continue with automated, browser, and sub-agent review unless a risky external action requires approval.
+- Phase 8 needs Stripe test mode inputs before checkout/webhook activation:
+  - Stripe test secret key.
+  - Stripe test publishable key.
+  - Stripe webhook signing secret for the Vercel preview endpoint or Stripe CLI forwarding.
+  - Initial plan names, monthly prices, and limits.
+  - Stripe test price IDs for selected plans, or permission for Codex to create them in Stripe test mode after account access is configured.
+  - Trial policy, if any.
+  - `past_due` behavior: grace period, block AI only, or block new public chat/paid actions.
 
 ## Manual Test Log
 
@@ -227,4 +240,4 @@ Phase 1 automated checks passed on AWS. Google sign-in was verified end-to-end o
 
 Phase 2 acceptance cleanup automated review passed on AWS. The app can create campaign/widget/QR channels, generate public channel URLs/snippets/QR SVGs, enforce signed widget origin tokens, complete public hosted and embedded chat flows, persist source attribution including UTM term, hide/prominently inactivate disabled channel share actions, and keep all channel filters visible. Fresh Phase 2 preview deployed at https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app. Manual acceptance gate was removed by user instruction on 2026-06-16; Phase 2 is complete by autonomous/sub-agent review.
 
-Phase 3 automated/sub-agent review passed on AWS. AI-assisted replies are available behind the bot settings toggle, deterministic lead state remains the source of truth, safety fallbacks prevent legal/tax/mortgage/fair-housing/property-fact invention paths, and AI metadata is stored in bot message JSON. Phase 4 automated/sub-agent review also passed: dashboard property/knowledge CRUD, controlled retrieval, property cards, no-invention fallback, archived-record exclusion, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Phase 5 automated/sub-agent review passed: buyer consultation, seller valuation, showing request, appointment dashboard, lead detail panel, calendar URL, skipped notification logging, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Fresh Phase 5 preview deployed at https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app; inspect status Ready; authenticated Vercel curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses. Phase 6 automated/sub-agent review passed: workspace settings, copy-link invites, owner/admin/agent/viewer roles, team profiles, bot routing, team inbox filters, lead reassignment, appointment routing after reassignment, audit events, viewer read-only UI, anonymous denial, direct mutation denial, audit spoof denial, and last-owner guard are covered. Fresh Phase 6 preview deployed at https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app. Phase 7 is now complete; Phase 8 planning can begin.
+Phase 3 automated/sub-agent review passed on AWS. AI-assisted replies are available behind the bot settings toggle, deterministic lead state remains the source of truth, safety fallbacks prevent legal/tax/mortgage/fair-housing/property-fact invention paths, and AI metadata is stored in bot message JSON. Phase 4 automated/sub-agent review also passed: dashboard property/knowledge CRUD, controlled retrieval, property cards, no-invention fallback, archived-record exclusion, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Phase 5 automated/sub-agent review passed: buyer consultation, seller valuation, showing request, appointment dashboard, lead detail panel, calendar URL, skipped notification logging, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Fresh Phase 5 preview deployed at https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app; inspect status Ready; authenticated Vercel curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses. Phase 6 automated/sub-agent review passed: workspace settings, copy-link invites, owner/admin/agent/viewer roles, team profiles, bot routing, team inbox filters, lead reassignment, appointment routing after reassignment, audit events, viewer read-only UI, anonymous denial, direct mutation denial, audit spoof denial, and last-owner guard are covered. Fresh Phase 6 preview deployed at https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app. Phase 7 automated/sub-agent review passed and fresh Phase 7 preview deployed at https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app. Phase 8 Billing, Entitlements, and Usage Limits is planned; implementation is next within the documented scope.

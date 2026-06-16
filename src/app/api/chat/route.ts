@@ -18,7 +18,9 @@ import {
   type ChannelType,
 } from "@/lib/channels";
 import { sendAppointmentNotification, type AppointmentNotificationResult } from "@/lib/notifications";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkChatAbuse, checkContentLength } from "@/lib/abuse";
+import { createRouteLogger, requestIdFromHeaders } from "@/lib/observability";
+import { checkRateLimit, reservePersistentRateLimit, type PersistentRateLimitClient } from "@/lib/rate-limit";
 import { createConversationSession, hashValue, parseConversationSession, verifyWidgetChannelToken } from "@/lib/security";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -90,32 +92,58 @@ type ResolvedBotChannel =
   | { error: string; status: number; bot?: never; channel?: never; attribution?: never };
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
+  const headerStore = await headers();
+  const logger = createRouteLogger({ route: "api.chat", requestId: requestIdFromHeaders(headerStore), startedAt });
+  const contentLength = checkContentLength(headerStore.get("content-length"));
+
+  if (!contentLength.allowed) {
+    logger.warn("chat_payload_rejected", { reason: contentLength.code });
+    logger.done(contentLength.status);
+    return NextResponse.json({ error: "Message is too large." }, { status: contentLength.status });
+  }
+
   const parsed = requestSchema.safeParse(await safeJson(request));
 
   if (!parsed.success) {
+    logger.warn("chat_payload_rejected", { reason: "schema", issueCount: parsed.error.issues.length });
+    logger.done(400);
     return NextResponse.json({ error: "Invalid chat request." }, { status: 400 });
   }
 
-  const headerStore = await headers();
   const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ipHash = hashValue(ip);
   const userAgent = headerStore.get("user-agent") ?? "unknown";
-  const rateIdentity = parsed.data.channelKey ?? parsed.data.slug ?? "unknown";
-  const rate = checkRateLimit({
-    key: `chat:${rateIdentity}:${hashValue(ip).slice(0, 16)}`,
-    limit: 30,
+  const localRate = checkRateLimit({
+    key: `chat:local:${ipHash.slice(0, 16)}`,
+    limit: 180,
     windowMs: 60_000,
   });
 
-  if (!rate.allowed) {
+  if (!localRate.allowed) {
+    logger.warn("chat_rate_limited", { scope: "local_ip" });
+    logger.done(429);
     return NextResponse.json({ error: "Too many messages. Please wait a moment and try again." }, { status: 429 });
   }
 
   let admin;
   try {
     admin = getSupabaseAdminClient();
-  } catch {
+  } catch (error) {
+    logger.error("chat_admin_client_unavailable", error);
+    logger.done(503);
     return NextResponse.json({ error: "Chat is not configured yet." }, { status: 503 });
   }
+
+  const globalLimit = await reservePublicLimit({
+    admin,
+    logger,
+    key: `chat:global:${ipHash.slice(0, 24)}:minute`,
+    limit: 300,
+    windowSeconds: 60,
+    scope: "global_ip",
+  });
+  if (globalLimit) return globalLimit;
 
   const resolved = await resolveBotChannel({
     admin,
@@ -128,10 +156,41 @@ export async function POST(request: Request) {
   });
 
   if ("error" in resolved) {
-    return NextResponse.json({ error: resolved.error }, { status: resolved.status });
+    const status = resolved.status ?? 500;
+    logger.warn("chat_channel_rejected", { status });
+    logger.done(status);
+    return NextResponse.json({ error: resolved.error }, { status });
   }
 
   const { bot, channel, attribution } = resolved;
+  const abuse = checkChatAbuse(parsed.data.message);
+  if (!abuse.allowed) {
+    await recordAbuseEvent({
+      admin,
+      logger,
+      route: "api.chat",
+      reason: abuse.code,
+      ipHash,
+      workspaceId: bot.workspace_id,
+      botId: bot.id,
+      channelId: channel.id,
+      metadata: { channelType: channel.type },
+    });
+    logger.warn("chat_abuse_blocked", { reason: abuse.code, workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id });
+    logger.done(abuse.status);
+    return NextResponse.json({ error: abuse.status === 413 ? "Message is too large." : "Message could not be accepted." }, { status: abuse.status });
+  }
+
+  const channelLimit = await reservePublicLimit({
+    admin,
+    logger,
+    key: `chat:${bot.workspace_id}:${channel.id}:${ipHash.slice(0, 24)}:minute`,
+    limit: 30,
+    windowSeconds: 60,
+    scope: "workspace_channel_ip",
+  });
+  if (channelLimit) return channelLimit;
+
   const session = await getOrCreateConversation({
     bot,
     channel,
@@ -142,7 +201,10 @@ export async function POST(request: Request) {
   });
 
   if ("error" in session) {
-    return NextResponse.json({ error: session.error }, { status: session.status });
+    const status = session.status ?? 500;
+    logger.warn("chat_session_rejected", { status, workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id });
+    logger.done(status);
+    return NextResponse.json({ error: session.error }, { status });
   }
 
   const conversation = session.conversation;
@@ -156,9 +218,13 @@ export async function POST(request: Request) {
   });
 
   if (!usageReservation.ok) {
+    logger.error("chat_usage_write_failed", usageReservation.error ?? "unknown", { workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id });
+    logger.done(500);
     return NextResponse.json({ error: "Could not save chat usage. Please try again." }, { status: 500 });
   }
   if (!usageReservation.allowed) {
+    logger.warn("chat_usage_limit_blocked", { workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id });
+    logger.done(402);
     return NextResponse.json({ error: "This assistant is temporarily unavailable. Please try again later." }, { status: 402 });
   }
 
@@ -179,7 +245,11 @@ export async function POST(request: Request) {
       idempotencyKey: `ai_message:${conversation.id}:${Date.now()}:${hashValue(parsed.data.message).slice(0, 16)}`,
       metadata: { botId: bot.id, channelId: channel.id },
     });
-    if (!aiUsage.ok) return NextResponse.json({ error: "Could not save chat usage. Please try again." }, { status: 500 });
+    if (!aiUsage.ok) {
+      logger.error("chat_ai_usage_write_failed", aiUsage.error ?? "unknown", { workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id });
+      logger.done(500);
+      return NextResponse.json({ error: "Could not save chat usage. Please try again." }, { status: 500 });
+    }
     if (!aiUsage.allowed) {
       aiBot = { ...bot, ai_enabled: false };
     }
@@ -217,6 +287,8 @@ export async function POST(request: Request) {
       await admin.from("conversations").delete().eq("id", conversation.id).eq("workspace_id", bot.workspace_id);
     }
 
+    logger.error("chat_persistence_failed", "record_chat_turn_failed", { workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id, conversationId: conversation.id });
+    logger.done(500);
     return NextResponse.json({ error: "Could not save chat message. Please try again." }, { status: 500 });
   }
 
@@ -231,6 +303,7 @@ export async function POST(request: Request) {
     calendarUrl: persistence.calendarUrl,
   });
 
+  logger.done(200, { workspaceId: bot.workspace_id, botId: bot.id, channelId: channel.id, channelType: channel.type, completed: result.completed, leadStatus: result.status });
   return NextResponse.json({
     sessionId: session.sessionId,
     reply: result.reply,
@@ -244,6 +317,75 @@ export async function POST(request: Request) {
       notificationStatus: notification?.status,
     } : undefined,
   });
+}
+
+type RouteLogger = ReturnType<typeof createRouteLogger>;
+
+async function reservePublicLimit({
+  admin,
+  logger,
+  key,
+  limit,
+  windowSeconds,
+  scope,
+}: {
+  admin: ReturnType<typeof getSupabaseAdminClient>;
+  logger: RouteLogger;
+  key: string;
+  limit: number;
+  windowSeconds: number;
+  scope: string;
+}) {
+  const result = await reservePersistentRateLimit(admin as unknown as PersistentRateLimitClient, { key, limit, windowSeconds });
+  if (!result.ok) {
+    logger.error("public_rate_limit_failed", result.error, { scope });
+    logger.done(503);
+    return NextResponse.json({ error: "Chat is temporarily unavailable. Please try again." }, { status: 503 });
+  }
+
+  if (!result.allowed) {
+    logger.warn("public_rate_limit_blocked", { scope, resetAt: result.resetAt });
+    logger.done(429);
+    return NextResponse.json({ error: "Too many messages. Please wait a moment and try again." }, { status: 429 });
+  }
+
+  return null;
+}
+
+async function recordAbuseEvent({
+  admin,
+  logger,
+  route,
+  reason,
+  ipHash,
+  workspaceId,
+  botId,
+  channelId,
+  metadata = {},
+}: {
+  admin: ReturnType<typeof getSupabaseAdminClient>;
+  logger: RouteLogger;
+  route: string;
+  reason: string;
+  ipHash: string;
+  workspaceId?: string;
+  botId?: string;
+  channelId?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const { error } = await admin.from("abuse_events").insert({
+    workspace_id: workspaceId ?? null,
+    bot_id: botId ?? null,
+    bot_channel_id: channelId ?? null,
+    route,
+    reason,
+    ip_hash: ipHash,
+    metadata,
+  });
+
+  if (error) {
+    logger.warn("abuse_event_write_failed", { reason, error: error.message });
+  }
 }
 
 function shouldMeterAiTurn(bot: BotRecord) {
@@ -429,7 +571,7 @@ async function loadRetrievalContext({
       knowledgeSnippets: selectKnowledgeSnippets((knowledgeDocuments ?? []) as KnowledgeSearchRow[], visitorMessage),
     };
   } catch (error) {
-    console.error("chat_retrieval_failed", error instanceof Error ? error.message : "unknown");
+    createRouteLogger({ route: "api.chat.retrieval" }).error("chat_retrieval_failed", error);
     return { propertyCards: [], knowledgeSnippets: [] };
   }
 }
@@ -593,7 +735,7 @@ async function recordChatTurn({
   });
 
   if (error) {
-    console.error("record_chat_turn_with_appointment failed", error.message);
+    createRouteLogger({ route: "api.chat.persistence" }).error("record_chat_turn_with_appointment_failed", error.message);
     return { ok: false as const };
   }
 
@@ -660,7 +802,7 @@ async function updateNotificationEvent({
     .eq("workspace_id", workspaceId);
 
   if (error) {
-    console.error("notification_event_update_failed", error.message);
+    createRouteLogger({ route: "api.chat.notification" }).error("notification_event_update_failed", error.message);
   }
 }
 

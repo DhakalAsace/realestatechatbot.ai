@@ -217,8 +217,8 @@ export function detectSafetyFlags(message: string): AiSafetyFlag[] {
   const flags: AiSafetyFlag[] = [];
 
   if (/\b(lawyer|legal|contract clause|lawsuit|sue|liability|disclosure law|legal advice)\b/.test(text)) flags.push("legal_advice");
-  if (/\b(tax|capital gains|write[- ]?off|deduction|1031|income tax|tax advice)\b/.test(text)) flags.push("tax_advice");
-  if (/\b(mortgage rate|interest rate|fixed or variable|loan advice|refinance|can i afford|financial advice|investment return|guaranteed return)\b/.test(text)) {
+  if (/\b(tax(?:es)?|capital gains|write[- ]?off|deduction|1031|income tax|tax advice|avoid taxes)\b/.test(text)) flags.push("tax_advice");
+  if (/\b(mortgage rate|mortgage product|interest rate|fixed or variable|loan advice|refinance|can i afford|financial advice|investment return|guaranteed return)\b/.test(text)) {
     flags.push("mortgage_or_financial_advice");
   }
   if (/\b(safe|family friendly|families|kids like us|race|ethnic|religion|church|mosque|temple|crime rate|demographic|protected class)\b/.test(text)) {

@@ -375,7 +375,7 @@ export async function createAgentProfile(formData: FormData) {
 
   await writeAuditEvent(supabase, membership.workspace_id, user.id, parsed.data.userId || null, "agent_profile_created", "agent_profile", data.id, { profileType: parsed.data.profileType, displayName: parsed.data.displayName });
   revalidatePath("/dashboard/team");
-  redirect("/dashboard/team?saved=profile");
+  redirect(`/dashboard/team?saved=profile&profile=${data.id}`);
 }
 
 export async function assignLead(formData: FormData) {
@@ -419,7 +419,7 @@ export async function acceptWorkspaceInvitation(formData: FormData) {
 }
 
 export async function createChannel(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = channelSchema.safeParse({
     botId: formData.get("botId"),
     type: formData.get("type"),
@@ -466,6 +466,7 @@ export async function createChannel(formData: FormData) {
 
   if (error) redirect(`/dashboard/channels?error=${billingLimitError(error) ? "limit" : "create"}`);
 
+  await writeAuditEvent(supabase, bot.workspace_id, user.id, null, "channel_created", "bot_channel", null, { botId: bot.id, type: parsed.data.type, label: parsed.data.label });
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/channels");
   revalidatePath("/dashboard/leads");
@@ -473,7 +474,7 @@ export async function createChannel(formData: FormData) {
 }
 
 export async function updateChannel(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = channelUpdateSchema.safeParse({
     channelId: formData.get("channelId"),
     label: formData.get("label"),
@@ -521,6 +522,7 @@ export async function updateChannel(formData: FormData) {
 
   if (error) redirect(`/dashboard/channels?error=${billingLimitError(error) ? "limit" : "update"}`);
 
+  await writeAuditEvent(supabase, channel.workspace_id, user.id, null, "channel_updated", "bot_channel", parsed.data.channelId, { status: parsed.data.status, label: parsed.data.label, source: parsed.data.source ?? null, medium: parsed.data.medium ?? null });
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/channels");
   revalidatePath("/dashboard/leads");
@@ -528,7 +530,7 @@ export async function updateChannel(formData: FormData) {
 }
 
 export async function updateBot(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = botSchema.safeParse({
     botId: formData.get("botId"),
     assignedProfileId: formData.get("assignedProfileId") === null ? undefined : String(formData.get("assignedProfileId")),
@@ -612,6 +614,7 @@ export async function updateBot(formData: FormData) {
     if (profileError) redirect(`/dashboard/bots/${parsed.data.botId}?error=calendar`);
   }
 
+  await writeAuditEvent(supabase, existingBot.workspace_id, user.id, null, "bot_updated", "bot", parsed.data.botId, { slug: parsed.data.slug, status: parsed.data.status, aiEnabled: parsed.data.aiEnabled, assignedProfileId });
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/bots/${parsed.data.botId}`);
   redirect(`/dashboard/bots/${parsed.data.botId}?saved=1`);
@@ -619,7 +622,7 @@ export async function updateBot(formData: FormData) {
 
 
 export async function createProperty(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = parsePropertyForm(formData);
   if (!parsed.success) redirect("/dashboard/properties?error=validation");
 
@@ -638,12 +641,13 @@ export async function createProperty(formData: FormData) {
 
   if (error) redirect(`/dashboard/properties?error=${billingLimitError(error) ? "limit" : "create"}`);
 
+  await writeAuditEvent(supabase, bot.workspace_id, user.id, null, "property_created", "property", null, { botId: bot.id, title: parsed.data.title, status: parsed.data.status });
   revalidatePath("/dashboard/properties");
   redirect("/dashboard/properties?saved=created");
 }
 
 export async function updateProperty(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = parsePropertyForm(formData);
   if (!parsed.success || !parsed.data.propertyId) redirect("/dashboard/properties?error=validation");
 
@@ -661,12 +665,13 @@ export async function updateProperty(formData: FormData) {
 
   if (error) redirect("/dashboard/properties?error=update");
 
+  await writeAuditEvent(supabase, existing.workspace_id, user.id, null, "property_updated", "property", parsed.data.propertyId, { botId: bot.id, title: parsed.data.title, status: parsed.data.status });
   revalidatePath("/dashboard/properties");
   redirect("/dashboard/properties?saved=updated");
 }
 
 export async function createKnowledgeDocument(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = parseKnowledgeForm(formData);
   if (!parsed.success) redirect("/dashboard/knowledge?error=validation");
 
@@ -685,12 +690,13 @@ export async function createKnowledgeDocument(formData: FormData) {
 
   if (error) redirect(`/dashboard/knowledge?error=${billingLimitError(error) ? "limit" : "create"}`);
 
+  await writeAuditEvent(supabase, bot.workspace_id, user.id, null, "knowledge_document_created", "knowledge_document", null, { botId: bot.id, kind: parsed.data.kind, title: parsed.data.title, status: parsed.data.status });
   revalidatePath("/dashboard/knowledge");
   redirect("/dashboard/knowledge?saved=created");
 }
 
 export async function updateKnowledgeDocument(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = parseKnowledgeForm(formData);
   if (!parsed.success || !parsed.data.documentId) redirect("/dashboard/knowledge?error=validation");
 
@@ -708,12 +714,13 @@ export async function updateKnowledgeDocument(formData: FormData) {
 
   if (error) redirect("/dashboard/knowledge?error=update");
 
+  await writeAuditEvent(supabase, existing.workspace_id, user.id, null, "knowledge_document_updated", "knowledge_document", parsed.data.documentId, { botId: bot.id, kind: parsed.data.kind, title: parsed.data.title, status: parsed.data.status });
   revalidatePath("/dashboard/knowledge");
   redirect("/dashboard/knowledge?saved=updated");
 }
 
 export async function updateAppointmentStatus(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = appointmentUpdateSchema.safeParse({
     appointmentId: formData.get("appointmentId"),
     status: formData.get("status"),
@@ -733,11 +740,12 @@ export async function updateAppointmentStatus(formData: FormData) {
       ...timestampUpdates,
     })
     .eq("id", parsed.data.appointmentId)
-    .select("id");
+    .select("id, workspace_id");
 
   const redirectTo = parsed.data.redirectTo?.startsWith("/dashboard/") ? parsed.data.redirectTo : "/dashboard/appointments";
   if (error || (updatedAppointments?.length ?? 0) !== 1) redirect(`${redirectTo}?error=status`);
 
+  await writeAuditEvent(supabase, (updatedAppointments?.[0] as { workspace_id: string }).workspace_id, user.id, null, "appointment_status_updated", "appointment", parsed.data.appointmentId, { status: parsed.data.status });
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/appointments");
   revalidatePath(redirectTo);
@@ -753,7 +761,7 @@ function appointmentTimestampUpdates(status: z.infer<typeof appointmentUpdateSch
 }
 
 export async function updateLeadStatus(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const parsed = leadStatusSchema.safeParse({
     leadId: formData.get("leadId"),
     status: formData.get("status"),
@@ -766,10 +774,11 @@ export async function updateLeadStatus(formData: FormData) {
     .from("leads")
     .update({ status: parsed.data.status })
     .eq("id", parsed.data.leadId)
-    .select("id");
+    .select("id, workspace_id");
 
   if (error || (updatedLeads?.length ?? 0) !== 1) redirect(`/dashboard/leads/${parsed.data.leadId}?error=status`);
 
+  await writeAuditEvent(supabase, (updatedLeads?.[0] as { workspace_id: string }).workspace_id, user.id, null, "lead_status_updated", "lead", parsed.data.leadId, { status: parsed.data.status });
   revalidatePath("/dashboard/leads");
   revalidatePath(`/dashboard/leads/${parsed.data.leadId}`);
   redirect(`/dashboard/leads/${parsed.data.leadId}?saved=1`);
@@ -979,11 +988,12 @@ export async function createBillingCheckoutSession(formData: FormData) {
   });
 
   if (!session.url) redirect("/dashboard/billing?error=checkout");
+  await writeAuditEvent(await createServerSupabaseClient(), membership.workspace_id, user.id, null, "billing_checkout_created", "billing", session.id, { planKey: parsed.data.planKey });
   redirect(session.url);
 }
 
 export async function createBillingPortalSession() {
-  const { membership } = await requireActionContext();
+  const { user, membership } = await requireActionContext();
   ensureManager(membership.role, "/dashboard/billing?error=permission");
 
   const runtimeStatus = getStripeRuntimeStatus();
@@ -1004,6 +1014,7 @@ export async function createBillingPortalSession() {
     return_url: `${getAppUrl()}/dashboard/billing`,
   });
 
+  await writeAuditEvent(await createServerSupabaseClient(), membership.workspace_id, user.id, null, "billing_portal_created", "billing", session.id, {});
   redirect(session.url);
 }
 

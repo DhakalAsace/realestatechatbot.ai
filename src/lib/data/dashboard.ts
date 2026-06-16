@@ -325,6 +325,18 @@ export type UsageEventRow = {
   created_at: string;
 };
 
+export type AbuseEventRow = {
+  id: string;
+  workspace_id: string | null;
+  bot_id: string | null;
+  bot_channel_id: string | null;
+  route: string;
+  reason: string;
+  ip_hash: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
 export async function getDashboardContext() {
   const user = await requireUser();
   const supabase = await createServerSupabaseClient();
@@ -618,4 +630,56 @@ export async function getTeamContext() {
     invitations: (invitations ?? []) as WorkspaceInvitationRow[],
     auditEvents: (auditEvents ?? []) as AuditEventRow[],
   };
+}
+
+export async function getAdminContext() {
+  const context = await getDashboardContext();
+
+  if (!context.workspace) {
+    return { ...context, auditEvents: [], usageEvents: [], notificationEvents: [], abuseEvents: [] };
+  }
+
+  if (!isWorkspaceAdminRole(context.membership?.role)) {
+    return { ...context, auditEvents: [], usageEvents: [], notificationEvents: [], abuseEvents: [] };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const [{ data: auditEvents }, { data: usageEvents }, { data: notificationEvents }, { data: abuseEvents }] = await Promise.all([
+    supabase
+      .from("audit_events")
+      .select("id, workspace_id, actor_user_id, target_user_id, action, subject_type, subject_id, metadata, created_at")
+      .eq("workspace_id", context.workspace.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("usage_events")
+      .select("id, workspace_id, event_type, quantity, source_type, source_id, idempotency_key, occurred_at, period_start, metadata, created_at")
+      .eq("workspace_id", context.workspace.id)
+      .order("occurred_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("notification_events")
+      .select("id, workspace_id, appointment_id, lead_id, follow_up_state_id, follow_up_message_id, event_type, status, recipient_email, provider, provider_message_id, error_code, error_message, created_at, updated_at")
+      .eq("workspace_id", context.workspace.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("abuse_events")
+      .select("id, workspace_id, bot_id, bot_channel_id, route, reason, ip_hash, metadata, created_at")
+      .eq("workspace_id", context.workspace.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+  ]);
+
+  return {
+    ...context,
+    auditEvents: (auditEvents ?? []) as AuditEventRow[],
+    usageEvents: (usageEvents ?? []) as UsageEventRow[],
+    notificationEvents: (notificationEvents ?? []) as NotificationEventRow[],
+    abuseEvents: (abuseEvents ?? []) as AbuseEventRow[],
+  };
+}
+
+export function isWorkspaceAdminRole(role: WorkspaceRole | null | undefined) {
+  return role === "owner" || role === "admin";
 }

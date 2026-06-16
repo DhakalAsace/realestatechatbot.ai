@@ -2,11 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { safeInternalPath } from "@/lib/safe-redirect";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-
-function safeNext(value: string | null) {
-  return value && value.startsWith("/") ? value : "/dashboard";
-}
 
 function getFailureReason(error: { message?: string; code?: string }) {
   const value = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
@@ -31,7 +28,7 @@ export function AuthCallbackClient() {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const hashError = hashParams.get("error_code") || hashParams.get("error");
     const code = searchParams.get("code");
-    const next = safeNext(searchParams.get("next"));
+    const next = safeInternalPath(searchParams.get("next"));
 
     if (hashError) {
       router.replace("/login?error=auth-callback");

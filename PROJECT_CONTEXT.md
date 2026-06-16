@@ -11,18 +11,18 @@
 
 ## Current Goal
 
-Phase 0 foundation through Phase 8 Billing, Entitlements, and Usage Limits are complete on AWS by automated checks, browser/Vercel preview verification, and sub-agent review. Phase 9 SEO and Product-Led Acquisition is implemented and in verification on AWS. Real Stripe checkout/portal/payment activation remains gated on test credentials, price IDs, and pricing decisions. The active planning file is `BUILD_PLAN.md`.
+Phase 0 foundation through Phase 10 Hardening and Launch Readiness are implemented on AWS with automated checks, Playwright browser regression, Supabase migration push, Vercel preview deploy, and sub-agent review. Phase 10 remains pending user preview acceptance. Real Stripe checkout/portal/payment activation, real email delivery, domain attachment, production promotion, and OpenAI key rotation remain explicit external gates.
 
 Current review target:
 
 ```text
-Finish Phase 9 full verification, preview deployment, browser QA, docs finalization, and push; stop for payment activation, production promotion, secret rotation, or irreversible account-level changes
+Review the Phase 10 preview, verify launch-hardening surfaces, and accept or request fixes. Do not start the next phase until this preview review is handled.
 ```
 
 Latest verified preview:
 
 ```text
-https://realestatechatbot-qnnce8o3f-dhakalasaces-projects.vercel.app
+https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app
 ```
 
 ## Development Rules
@@ -258,3 +258,17 @@ Phase 1 automated checks passed on AWS. Google sign-in was verified end-to-end o
 Phase 2 acceptance cleanup automated review passed on AWS. The app can create campaign/widget/QR channels, generate public channel URLs/snippets/QR SVGs, enforce signed widget origin tokens, complete public hosted and embedded chat flows, persist source attribution including UTM term, hide/prominently inactivate disabled channel share actions, and keep all channel filters visible. Fresh Phase 2 preview deployed at https://realestatechatbot-zqomfi5he-dhakalasaces-projects.vercel.app. Manual acceptance gate was removed by user instruction on 2026-06-16; Phase 2 is complete by autonomous/sub-agent review.
 
 Phase 3 automated/sub-agent review passed on AWS. AI-assisted replies are available behind the bot settings toggle, deterministic lead state remains the source of truth, safety fallbacks prevent legal/tax/mortgage/fair-housing/property-fact invention paths, and AI metadata is stored in bot message JSON. Phase 4 automated/sub-agent review also passed: dashboard property/knowledge CRUD, controlled retrieval, property cards, no-invention fallback, archived-record exclusion, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Phase 5 automated/sub-agent review passed: buyer consultation, seller valuation, showing request, appointment dashboard, lead detail panel, calendar URL, skipped notification logging, anonymous denial, and cross-tenant denial are covered by unit and Playwright tests. Fresh Phase 5 preview deployed at https://realestatechatbot-auanq4p2b-dhakalasaces-projects.vercel.app; inspect status Ready; authenticated Vercel curl verified `/` and `/c/sarah-patel`; recent logs showed only 200 responses. Phase 6 automated/sub-agent review passed: workspace settings, copy-link invites, owner/admin/agent/viewer roles, team profiles, bot routing, team inbox filters, lead reassignment, appointment routing after reassignment, audit events, viewer read-only UI, anonymous denial, direct mutation denial, audit spoof denial, and last-owner guard are covered. Fresh Phase 6 preview deployed at https://realestatechatbot-gzhe5q504-dhakalasaces-projects.vercel.app. Phase 7 automated/sub-agent review passed and fresh Phase 7 preview deployed at https://realestatechatbot-rmwjw3ifn-dhakalasaces-projects.vercel.app. Phase 8 automated/sub-agent review passed and fresh Phase 8 preview deployed at https://realestatechatbot-qnnce8o3f-dhakalasaces-projects.vercel.app. Billing data/RLS, dashboard, signed webhooks, atomic usage reservations, and DB resource-limit triggers are in place. Real Stripe checkout/portal/payment activation remains pending test credentials and price IDs. Phase 9 automated/browser/sub-agent review passed and fresh Phase 9 preview deployed at https://realestatechatbot-gbomiktfq-dhakalasaces-projects.vercel.app. SEO homepage/pages, metadata, schema, sitemap, robots, OG image, template generator, noindex customer-bot behavior, and full regression are complete. Production promotion is not done.
+
+- 2026-06-16: Phase 10 Hardening and Launch Readiness implemented on AWS. Added migration `202606160014_phase10_launch_hardening.sql` with database-backed public rate limit buckets/RPC, `abuse_events`, and owner/admin-only audit visibility. Public `/api/chat` and `/widget.js` now have shared rate limits, structured JSON logs, and fail-closed behavior when the shared limiter is unavailable.
+- Phase 10 public chat hardening blocks oversized payloads, link floods, unsafe markup, repeated characters, spam phrases, and prompt/secret extraction before sessions, usage, AI, messages, or leads are created. Abuse blocks are recorded for owner/admin review after channel resolution.
+- Phase 10 added owner/admin-only lead CSV export at `/dashboard/leads/export` with status/channel/assignee filters, a 1000-row cap, CSV formula escaping, and audit logging.
+- Phase 10 added `/dashboard/admin` and `/dashboard/audit` for workspace-scoped launch readiness, audit review, abuse blocks, usage events, and notification health. Bulk export and audit/abuse review are owner/admin-only.
+- Phase 10 added `/privacy`, `/terms`, `/acceptable-use`, `/ai-disclaimer`, footer links, sitemap entries, and visible hosted/widget chat disclaimer copy. Chat input accessibility was improved with a real label and `aria-live` message updates.
+- Phase 10 security fix: auth callback `next` values now use `safeInternalPath`, rejecting protocol-relative URLs, absolute URLs, backslashes, and non-dashboard destinations.
+- Phase 10 audit coverage was expanded for bot, channel, property, knowledge, lead status, appointment status, billing checkout/portal, and profile create actions. Profile creation redirects now include the created profile id to avoid stale success state.
+- Phase 10 checks passed on AWS: `npm run typecheck`, `npm run lint`, `npm test` (18 files, 84 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (15 Chromium tests).
+- Supabase migration `202606160014_phase10_launch_hardening.sql` was pushed to project `dwvkmxtumugvgytmlbsk` with `npx supabase db push`.
+- Fresh Phase 10 preview deployed at https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated `vercel curl` verified `/privacy` and `/c/sarah-patel`; recent Vercel error-log scan returned no logs.
+- AWS disk cleanup before heavy Phase 10 verification removed generated `.next`, npm cache, and test reports. After build/e2e/deploy, root disk remained about 81% used with about 5.8 GB free.
+- `npm audit --omit=dev` still reports 2 moderate production advisories through Next's bundled PostCSS. Latest published `next` is already 16.2.9; npm's suggested force fix is a breaking downgrade to `next@9.3.3`, so this remains a launch watch item until a sane patched Next release is available.
+- Phase 10 is not accepted yet. User manual review of the fresh preview is the next gate. Production promotion and OpenAI key rotation are not done.

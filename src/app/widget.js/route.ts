@@ -1,5 +1,7 @@
 import { isChannelType, isPublicChannelKey, isSourceUrlAllowed, normalizeOrigin } from "@/lib/channels";
-import { createWidgetChannelToken } from "@/lib/security";
+import { createRouteLogger, requestIdFromHeaders } from "@/lib/observability";
+import { checkRateLimit, reservePersistentRateLimit, type PersistentRateLimitClient } from "@/lib/rate-limit";
+import { createWidgetChannelToken, hashValue } from "@/lib/security";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -22,19 +24,37 @@ type WidgetBot = {
 };
 
 export async function GET(request: Request) {
+  const startedAt = Date.now();
+  const logger = createRouteLogger({ route: "widget.js", requestId: requestIdFromHeaders(request.headers), startedAt });
   const url = new URL(request.url);
   const channelKey = url.searchParams.get("channel") ?? "";
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ipHash = hashValue(ip);
+  const localRate = checkRateLimit({ key: `widget:local:${ipHash.slice(0, 16)}`, limit: 240, windowMs: 60_000 });
+
+  if (!localRate.allowed) {
+    logger.warn("widget_rate_limited", { scope: "local_ip" });
+    logger.done(429);
+    return javascriptResponse("console.warn('RealEstateChatbot.ai widget: too many requests.');", 429);
+  }
 
   if (!isPublicChannelKey(channelKey)) {
+    logger.warn("widget_invalid_channel_key");
+    logger.done(400);
     return javascriptResponse("console.warn('RealEstateChatbot.ai widget: invalid channel key.');", 400);
   }
 
   let admin;
   try {
     admin = getSupabaseAdminClient();
-  } catch {
+  } catch (error) {
+    logger.error("widget_admin_client_unavailable", error);
+    logger.done(503);
     return javascriptResponse("console.warn('RealEstateChatbot.ai widget: chat is not configured.');", 503);
   }
+
+  const globalLimit = await reserveWidgetLimit({ admin, logger, key: `widget:global:${ipHash.slice(0, 24)}:minute`, limit: 240, windowSeconds: 60, scope: "global_ip" });
+  if (globalLimit) return globalLimit;
 
   const { data: channel } = await admin
     .from("bot_channels")
@@ -43,12 +63,19 @@ export async function GET(request: Request) {
     .maybeSingle<WidgetChannel>();
 
   if (!channel || channel.status !== "active" || !isChannelType(channel.type) || channel.type !== "web_embed") {
+    logger.warn("widget_channel_unavailable");
+    logger.done(404);
     return javascriptResponse("console.warn('RealEstateChatbot.ai widget: channel unavailable.');", 404);
   }
+
+  const channelLimit = await reserveWidgetLimit({ admin, logger, key: `widget:${channel.workspace_id}:${channel.id}:${ipHash.slice(0, 24)}:minute`, limit: 60, windowSeconds: 60, scope: "workspace_channel_ip" });
+  if (channelLimit) return channelLimit;
 
   const requestOrigin = getTrustedRequestOrigin(request);
   const allowedOrigins = channel.allowed_origins ?? [];
   if (!requestOrigin || !isSourceUrlAllowed(requestOrigin, allowedOrigins)) {
+    logger.warn("widget_origin_rejected", { channelId: channel.id, workspaceId: channel.workspace_id });
+    logger.done(403);
     return javascriptResponse("console.warn('RealEstateChatbot.ai widget: origin is not allowed for this channel.');", 403);
   }
 
@@ -60,6 +87,8 @@ export async function GET(request: Request) {
     .maybeSingle<WidgetBot>();
 
   if (!bot || bot.status !== "active") {
+    logger.warn("widget_bot_unavailable", { channelId: channel.id, workspaceId: channel.workspace_id });
+    logger.done(404);
     return javascriptResponse("console.warn('RealEstateChatbot.ai widget: bot unavailable.');", 404);
   }
 
@@ -135,7 +164,39 @@ export async function GET(request: Request) {
 })();
 `.trim();
 
+  logger.done(200, { workspaceId: channel.workspace_id, botId: bot.id, channelId: channel.id });
   return javascriptResponse(script, 200);
+}
+
+async function reserveWidgetLimit({
+  admin,
+  logger,
+  key,
+  limit,
+  windowSeconds,
+  scope,
+}: {
+  admin: ReturnType<typeof getSupabaseAdminClient>;
+  logger: ReturnType<typeof createRouteLogger>;
+  key: string;
+  limit: number;
+  windowSeconds: number;
+  scope: string;
+}) {
+  const result = await reservePersistentRateLimit(admin as unknown as PersistentRateLimitClient, { key, limit, windowSeconds });
+  if (!result.ok) {
+    logger.error("widget_rate_limit_failed", result.error, { scope });
+    logger.done(503);
+    return javascriptResponse("console.warn('RealEstateChatbot.ai widget: temporarily unavailable.');", 503);
+  }
+
+  if (!result.allowed) {
+    logger.warn("widget_rate_limited", { scope, resetAt: result.resetAt });
+    logger.done(429);
+    return javascriptResponse("console.warn('RealEstateChatbot.ai widget: too many requests.');", 429);
+  }
+
+  return null;
 }
 
 function getTrustedRequestOrigin(request: Request) {

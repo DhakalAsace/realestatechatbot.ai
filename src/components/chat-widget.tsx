@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { UTMInput } from "@/lib/channels";
 import type { PropertyCard } from "@/lib/chat/retrieval";
 
@@ -30,6 +30,7 @@ export function ChatWidget({ slug, channelKey, widgetToken, botName, greeting, b
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string>();
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   const canSend = input.trim().length > 0 && !isSending;
   const resolvedSourceUrl = useMemo(() => sourceUrl ?? (typeof window === "undefined" ? undefined : window.location.href), [sourceUrl]);
@@ -78,7 +79,7 @@ export function ChatWidget({ slug, channelKey, widgetToken, botName, greeting, b
         </span>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto bg-[#f7f9f4] p-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-[#f7f9f4] p-4" aria-live="polite">
         {messages.map((message, index) => (
           <div
             className={message.role === "bot" ? "max-w-[86%] rounded-lg bg-white px-4 py-3 shadow-sm" : "ml-auto max-w-[86%] rounded-lg px-4 py-3 text-white"}
@@ -112,9 +113,11 @@ export function ChatWidget({ slug, channelKey, widgetToken, botName, greeting, b
             void sendMessage();
           }}
         >
+          <label className="sr-only" htmlFor={inputId}>Chat message</label>
           <input
             className="min-h-12 flex-1 rounded-md border border-[#cbd5c7] px-3 outline-none focus:border-[#2861a8]"
             disabled={isSending}
+            id={inputId}
             maxLength={2000}
             onChange={(event) => setInput(event.target.value)}
             placeholder="Type your answer..."
@@ -125,6 +128,9 @@ export function ChatWidget({ slug, channelKey, widgetToken, botName, greeting, b
             Send
           </button>
         </form>
+        <p className="mt-2 text-xs leading-5 text-[#657064]">
+          AI-assisted intake only. Do not rely on this for legal, tax, mortgage, financial, or property advice. <a className="font-semibold text-[#2861a8]" href="/ai-disclaimer" target="_blank" rel="noreferrer">Review limits</a>.
+        </p>
       </div>
     </section>
   );

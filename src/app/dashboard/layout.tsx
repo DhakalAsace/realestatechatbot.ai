@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </Link>
             <p className="text-sm text-[#657064]">{user.email}</p>
           </div>
-          <nav className="flex flex-wrap items-center gap-2 text-sm">
+          <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Dashboard navigation">
             <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard">
               Overview
             </Link>
@@ -37,8 +37,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/team">
               Team
             </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/follow-ups">
+              Follow-ups
+            </Link>
             <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/billing">
               Billing
+            </Link>
+            <Link className="rounded-md border border-[#cbd5c7] bg-white px-3 py-2 font-medium hover:bg-[#f2f5ee]" href="/dashboard/admin">
+              Admin
             </Link>
             <form action={signOut}>
               <button className="rounded-md bg-[#162018] px-3 py-2 font-medium text-white hover:bg-[#2d392f]" type="submit">

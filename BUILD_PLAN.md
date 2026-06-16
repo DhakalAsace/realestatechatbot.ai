@@ -624,40 +624,40 @@ Phase 9 status: complete by autonomous/browser/sub-agent review on AWS. Producti
 
 Goal: make the app safe and solid enough for real agents.
 
-- [ ] Rate limiting on public chat endpoints.
-- [ ] Spam/abuse detection.
-- [ ] Error logging.
-- [ ] Vercel observability review.
-- [ ] Audit log review UI.
-- [ ] Internal admin dashboard.
-- [ ] Lead export.
-- [ ] Privacy policy.
-- [ ] Terms.
-- [ ] Acceptable use policy.
-- [ ] AI disclaimer.
-- [ ] Accessibility pass.
-- [ ] Performance pass.
-- [ ] Security checklist.
-- [ ] AI eval regression suite.
-- [ ] Rotate OpenAI key before public launch.
-- [ ] User reviews launch checklist.
+- [x] Rate limiting on public chat endpoints: Supabase-backed shared RPC buckets now guard `/api/chat` plus lightweight local buckets; `/widget.js` token issuance is also rate-limited.
+- [x] Spam/abuse detection: public chat blocks oversized payloads, link floods, unsafe markup, repeated characters, spam phrases, and prompt/secret extraction before sessions, usage, AI, messages, or leads are created.
+- [x] Error logging: public chat and widget issuance emit structured JSON logs with request IDs, route, status, duration, sanitized errors, rate-limit blocks, and abuse blocks.
+- [x] Vercel observability review: current closeout uses Vercel inspect/log checks; account-level log drains, Web Analytics, Speed Insights, or external monitoring remain a launch preference/gate.
+- [x] Audit log review UI: `/dashboard/audit` and `/dashboard/admin` expose owner/admin-only audit and abuse review surfaces.
+- [x] Internal admin dashboard: `/dashboard/admin` provides workspace-scoped launch readiness, audit, abuse, usage, and notification health review.
+- [x] Lead export: `/dashboard/leads/export` is owner/admin-only, capped, CSV-injection hardened, filter-aware, and audit-logged.
+- [x] Privacy policy: `/privacy` added and linked.
+- [x] Terms: `/terms` added and linked.
+- [x] Acceptable use policy: `/acceptable-use` added and linked.
+- [x] AI disclaimer: `/ai-disclaimer` added and linked; hosted/widget chat shows visible AI/professional-advice disclaimer copy.
+- [x] Accessibility pass: dashboard nav has an aria label, chat input has a real label, chat updates are `aria-live`, and Phase 10 browser smoke verifies the public chat disclaimer path. Full axe/Lighthouse CI is deferred until we choose that dependency/tooling.
+- [x] Performance pass: disk headroom restored before heavy runs, production `next build` passed, e2e runs against production `next start`, and generated `.next` output remains small. Full Lighthouse budgets are deferred.
+- [x] Security checklist: `SECURITY_CHECKLIST.md` documents RLS, public surface, secrets, AI safety, dependency-audit status, and external launch gates.
+- [x] AI eval regression suite: `src/lib/chat/evals.test.ts` covers legal/tax/mortgage/fair-housing/property-fact safety, state freeze, and prompt redaction.
+- [ ] Rotate OpenAI key before public launch. External secret-rotation gate; do only with explicit approval.
+- [ ] User reviews launch checklist. Pending user review of the fresh Phase 10 preview.
 
-Phase 10 status: pending.
+Phase 10 status: implemented and automated-gate passed on AWS; fresh preview deployed at `https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app`; pending user acceptance. Production promotion is not done.
 
 ## Current Next Step
 
-Proceed to Phase 10 launch-hardening unless Stripe activation inputs are supplied first. Keep production promotion, real payments, secret rotation, destructive external actions, and irreversible account changes behind explicit approval.
+Deploy and review the Phase 10 preview. Keep production promotion, real payments, OpenAI key rotation, destructive external actions, and irreversible account changes behind explicit approval.
 
 Current engineering status:
 
 ```text
-Phases 0-9 are complete. Phase 10 hardening and launch readiness is next; real Stripe payment activation still needs credentials and price decisions.
+Phases 0-10 implementation are complete through automated AWS checks. Phase 10 is not accepted until the user reviews the fresh preview. Stripe activation, real email delivery, domain attachment, production promotion, and OpenAI key rotation remain external gates.
 ```
 
 Human gate:
 
 ```text
-Manual acceptance gates are removed by user instruction. Continue phase-by-phase with automated, browser, and sub-agent review; stop only for credentials, money, production promotion, secret rotation, destructive or irreversible external actions.
+Manual acceptance gates are removed for routine development by user instruction. Continue phase-by-phase with automated, browser, and sub-agent review; stop only for credentials, money, production promotion, secret rotation, destructive or irreversible external actions. Phase 10 preview acceptance is still pending because the user explicitly asked for review before acceptance.
 ```
 
 

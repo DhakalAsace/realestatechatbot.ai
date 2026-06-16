@@ -14,6 +14,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const status = params.status;
   const channelId = params.channel;
   const assignee = params.assignee;
+  const exportUrl = exportHref({ status, channelId, assignee });
   const visibleLeads = leads.filter((lead) => {
     const statusMatches = status ? lead.status === status : true;
     const channelMatches = channelId ? lead.bot_channel_id === channelId : true;
@@ -29,6 +30,9 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
           <h1 className="mt-2 text-3xl font-semibold">Captured leads</h1>
         </div>
         <div className="flex flex-col gap-2 text-sm md:items-end">
+          <Link className="rounded-md bg-[#173f2f] px-3 py-2 font-semibold text-white" href={exportUrl}>
+            Export CSV
+          </Link>
           <div className="flex flex-wrap gap-2">
             <Filter href={filterHref({ channelId, assignee })} label="All" active={!status} />
             <Filter href={filterHref({ status: "new", channelId, assignee })} label="New" active={status === "new"} />
@@ -88,6 +92,15 @@ function filterHref({ status, channelId, assignee }: { status?: string; channelI
   if (assignee) params.set("assignee", assignee);
   const query = params.toString();
   return query ? `/dashboard/leads?${query}` : "/dashboard/leads";
+}
+
+function exportHref({ status, channelId, assignee }: { status?: string; channelId?: string; assignee?: string }) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (channelId) params.set("channel", channelId);
+  if (assignee) params.set("assignee", assignee);
+  const query = params.toString();
+  return query ? `/dashboard/leads/export?${query}` : "/dashboard/leads/export";
 }
 
 function Filter({ href, label, active }: { href: string; label: string; active: boolean }) {

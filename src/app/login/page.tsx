@@ -38,7 +38,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-[#bcd7c8]">Agent login</p>
             <h1 className="mt-4 text-3xl font-semibold leading-tight">Open your hosted lead bot dashboard.</h1>
             <p className="mt-4 max-w-sm text-sm leading-6 text-[#d7e6dc]">
-              Sign in with Google or create an email/password account, finish the Sarah Patel sample setup, and test buyer/seller lead capture from the hosted bot URL.
+              Sign in with Google or create an email/password account to manage bots, channels, lead inboxes, appointments, follow-ups, billing, and launch readiness.
             </p>
           </div>
 

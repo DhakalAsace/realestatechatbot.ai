@@ -640,24 +640,24 @@ Goal: make the app safe and solid enough for real agents.
 - [x] Security checklist: `SECURITY_CHECKLIST.md` documents RLS, public surface, secrets, AI safety, dependency-audit status, and external launch gates.
 - [x] AI eval regression suite: `src/lib/chat/evals.test.ts` covers legal/tax/mortgage/fair-housing/property-fact safety, state freeze, and prompt redaction.
 - [ ] Rotate OpenAI key before public launch. External secret-rotation gate; do only with explicit approval.
-- [ ] User reviews launch checklist. Pending user review of the fresh Phase 10 preview.
+- [x] Launch-hardening review completed by automated AWS checks, Vercel preview smoke, and sub-agent review. Routine manual acceptance gates are removed by user instruction.
 
-Phase 10 status: implemented and automated-gate passed on AWS; fresh preview deployed at `https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app`; pending user acceptance. Production promotion is not done.
+Phase 10 status: complete by automated/browser/sub-agent review on AWS; latest preview deployed at `https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app`. Production promotion is not done.
 
 ## Current Next Step
 
-Deploy and review the Phase 10 preview. Keep production promotion, real payments, OpenAI key rotation, destructive external actions, and irreversible account changes behind explicit approval.
+No Phase 11 is documented yet. Next work is either external launch-gate setup or a separately planned next phase. Keep production promotion, real payments, OpenAI key rotation, destructive external actions, and irreversible account changes behind explicit approval.
 
 Current engineering status:
 
 ```text
-Phases 0-10 implementation are complete through automated AWS checks. Phase 10 is not accepted until the user reviews the fresh preview. Stripe activation, real email delivery, domain attachment, production promotion, and OpenAI key rotation remain external gates.
+Phases 0-10 implementation are complete through automated AWS checks, Playwright, Vercel preview smoke, and sub-agent review. Stripe activation, real email delivery, domain attachment, observability/log-drain choice, formal legal/compliance finalization, production promotion, and OpenAI key rotation remain external gates.
 ```
 
 Human gate:
 
 ```text
-Manual acceptance gates are removed for routine development by user instruction. Continue phase-by-phase with automated, browser, and sub-agent review; stop only for credentials, money, production promotion, secret rotation, destructive or irreversible external actions. Phase 10 preview acceptance is still pending because the user explicitly asked for review before acceptance.
+Manual acceptance gates are removed for routine development by user instruction. Continue phase-by-phase with automated, browser, and sub-agent review; stop only for credentials, money, production promotion, secret rotation, destructive or irreversible external actions, or if the user explicitly reinstates a review gate.
 ```
 
 
@@ -672,10 +672,10 @@ Goal: replace fragile Supabase magic-link login with email/password plus Google 
 - [x] Configure Supabase password auth for Phase 1: signups enabled, email auto-confirm enabled, password minimum 8 characters.
 - [x] Create Google Cloud OAuth Web Client.
 - [x] Configure Supabase Google provider with Google Client ID and Client Secret.
-- [x] Add exact Google JavaScript origins for production/current review preview.
+- [x] Add exact Google JavaScript origins for production and the then-current review preview.
 - [x] Deploy preview and manually test email/password and Google sign-in.
 
-Required Google OAuth values:
+Google OAuth values to configure before testing Google sign-in on a preview:
 
 ```txt
 Authorized redirect URI:
@@ -683,5 +683,5 @@ https://dwvkmxtumugvgytmlbsk.supabase.co/auth/v1/callback
 
 Authorized JavaScript origins:
 https://realestatechatbot-ai.vercel.app
-https://<current-preview>.vercel.app
+https://<active-review-preview>.vercel.app
 ```

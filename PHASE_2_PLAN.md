@@ -12,7 +12,7 @@ one bot can be shared through hosted links, website widgets, QR codes, social/ca
 
 This follows the product direction in the raw verdict: RealEstateChatbot.ai is not just a hosted chatbot. It is a hosted link, website widget, QR/social chatbot system for real estate lead capture.
 
-Implementation status: complete by autonomous/sub-agent review. Built, closeout-hardened, acceptance-cleaned, deployed to a fresh Vercel preview from AWS, and verified with automated checks. User removed manual acceptance gates moving forward.
+Implementation status: complete by autonomous/sub-agent review. Built, closeout-hardened, acceptance-cleaned, deployed to a fresh Vercel preview from AWS, and verified with automated checks. User removed routine manual acceptance gates moving forward; still stop for credentials, payment activation, production promotion, secret rotation, destructive actions, irreversible external account changes, or any later gate the user explicitly reinstates.
 
 ## Docs To Follow
 

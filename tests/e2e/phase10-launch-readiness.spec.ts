@@ -97,6 +97,47 @@ test.describe.serial("Phase 10 launch readiness", () => {
     await expect(page.getByRole("heading", { name: "Workspace audit trail" })).toBeVisible();
     await expect(page.getByText("leads_exported").first()).toBeVisible();
   });
+
+  test("hides owner/admin launch actions from viewer role and keeps direct export forbidden", async ({ browser, page }) => {
+    const ownerEmail = uniqueEmail("phase10-role-owner");
+    const viewerEmail = uniqueEmail("phase10-role-viewer");
+    const slug = `e2e-phase10-role-${runId}`;
+
+    await createAccountThroughUi(page, ownerEmail);
+    await completeOnboarding(page, {
+      agentName: `Phase10 Role Agent ${runId}`,
+      brokerage: `Phase10 Role Realty ${runId}`,
+      email: `role-agent-${runId}@example.com`,
+      phone: "+1 204 555 0198",
+      city: "Winnipeg",
+      serviceAreas: "Winnipeg, River Heights, St. Vital",
+      slug,
+    });
+
+    const bot = await findBotBySlug(slug);
+    const viewerUser = await createConfirmedUser(viewerEmail);
+    const { error: memberError } = await admin.from("workspace_members").insert({
+      workspace_id: bot.workspace_id,
+      user_id: viewerUser.id,
+      role: "viewer",
+    });
+    expect(memberError).toBeNull();
+
+    const viewerPage = await newPublicPage(browser);
+    await signInThroughUi(viewerPage, viewerEmail);
+
+    await viewerPage.goto("/dashboard");
+    await expect(viewerPage.getByRole("link", { name: "Admin" })).toHaveCount(0);
+    await viewerPage.goto("/dashboard/leads");
+    await expect(viewerPage.getByRole("link", { name: "Export CSV" })).toHaveCount(0);
+
+    const exportResponse = await viewerPage.request.get("/dashboard/leads/export");
+    expect(exportResponse.status()).toBe(403);
+
+    await viewerPage.goto("/dashboard/admin");
+    await expect(viewerPage.getByRole("heading", { name: "Admin access required" })).toBeVisible();
+    await viewerPage.close();
+  });
 });
 
 async function createAccountThroughUi(page: Page, email: string) {
@@ -167,6 +208,25 @@ async function sendChat(page: Page, message: string) {
 async function newPublicPage(browser: Browser) {
   const context = await browser.newContext();
   return context.newPage();
+}
+
+async function createConfirmedUser(email: string): Promise<User> {
+  createdEmails.add(email);
+  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+
+  expect(error).toBeNull();
+  expect(data.user).not.toBeNull();
+
+  return data.user!;
+}
+
+async function findBotBySlug(slug: string) {
+  const { data, error } = await admin.from("bots").select("id, workspace_id, slug").eq("slug", slug).single();
+
+  expect(error).toBeNull();
+  expect(data).not.toBeNull();
+
+  return data as { id: string; workspace_id: string; slug: string };
 }
 
 async function cleanupUser(email: string) {

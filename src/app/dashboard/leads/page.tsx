@@ -8,13 +8,14 @@ type LeadsPageProps = {
 };
 
 export default async function LeadsPage({ searchParams }: LeadsPageProps) {
-  const [{ workspace, leads, channels, agentProfiles }, params] = await Promise.all([getDashboardContext(), searchParams]);
+  const [{ workspace, membership, leads, channels, agentProfiles }, params] = await Promise.all([getDashboardContext(), searchParams]);
   if (!workspace) redirect("/dashboard/onboarding");
 
   const status = params.status;
   const channelId = params.channel;
   const assignee = params.assignee;
   const exportUrl = exportHref({ status, channelId, assignee });
+  const canExportLeads = membership?.role === "owner" || membership?.role === "admin";
   const visibleLeads = leads.filter((lead) => {
     const statusMatches = status ? lead.status === status : true;
     const channelMatches = channelId ? lead.bot_channel_id === channelId : true;
@@ -30,9 +31,11 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
           <h1 className="mt-2 text-3xl font-semibold">Captured leads</h1>
         </div>
         <div className="flex flex-col gap-2 text-sm md:items-end">
-          <Link className="rounded-md bg-[#173f2f] px-3 py-2 font-semibold text-white" href={exportUrl}>
-            Export CSV
-          </Link>
+          {canExportLeads ? (
+            <Link className="rounded-md bg-[#173f2f] px-3 py-2 font-semibold text-white" href={exportUrl}>
+              Export CSV
+            </Link>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Filter href={filterHref({ channelId, assignee })} label="All" active={!status} />
             <Filter href={filterHref({ status: "new", channelId, assignee })} label="New" active={status === "new"} />

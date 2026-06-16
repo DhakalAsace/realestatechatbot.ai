@@ -11,18 +11,18 @@
 
 ## Current Goal
 
-Phase 0 foundation through Phase 10 Hardening and Launch Readiness are implemented on AWS with automated checks, Playwright browser regression, Supabase migration push, Vercel preview deploy, and sub-agent review. Phase 10 remains pending user preview acceptance. Real Stripe checkout/portal/payment activation, real email delivery, domain attachment, production promotion, and OpenAI key rotation remain explicit external gates.
+Phase 0 foundation through Phase 10 Hardening and Launch Readiness are complete on AWS by automated checks, Playwright browser regression, Supabase migration push, Vercel preview deploy, and sub-agent review. Real Stripe checkout/portal/payment activation, real email delivery, domain attachment, observability/log-drain choice, formal legal/compliance finalization, production promotion, and OpenAI key rotation remain explicit external gates.
 
-Current review target:
+Current target:
 
 ```text
-Review the Phase 10 preview, verify launch-hardening surfaces, and accept or request fixes. Do not start the next phase until this preview review is handled.
+No Phase 11 is documented yet. Continue only with external launch-gate setup or a separately planned next phase; keep risky external actions behind explicit approval.
 ```
 
 Latest verified preview:
 
 ```text
-https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app
+https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app
 ```
 
 ## Development Rules
@@ -118,6 +118,39 @@ https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app
 - Audit events for membership/profile/assignment changes
 - Owner-only owner role changes and locked last-owner guard
 - Read-only viewer UI plus RLS mutation denial coverage
+
+### Phase 7: Email Follow-Up Automation
+
+- Follow-up sequences, messages, lead preferences, and per-lead follow-up state
+- Consent-aware scheduling and unsubscribe support
+- Secured follow-up runner endpoint and Vercel cron configuration
+- Disabled-provider logging until real email delivery is configured
+- Dashboard follow-up review and lead-detail consent controls
+
+### Phase 8: Billing, Entitlements, and Usage Limits
+
+- Stripe test-mode integration points for Checkout, Portal, and webhooks
+- Supabase billing customers, subscriptions, usage events, and local entitlements
+- Atomic usage reservations before costly chat, AI, and follow-up actions
+- Plan limits for bots, channels, team seats, properties, and knowledge records
+- Billing dashboard and fail-closed billing actions without Stripe credentials
+
+### Phase 9: SEO and Product-Led Acquisition
+
+- Canonical marketing homepage and public acquisition pages
+- Real estate chatbot template generator
+- Page-specific metadata, canonical URLs, JSON-LD, robots, sitemap, and OG image
+- Customer bot/embed pages remain noindex
+- Production-server Playwright coverage for public SEO surfaces
+
+### Phase 10: Hardening and Launch Readiness
+
+- Supabase-backed public rate limiting and abuse-event logging
+- Structured logs for public chat/widget issuance paths
+- Owner/admin audit, abuse, usage, notification-health, and launch-readiness surfaces
+- Owner/admin-only CSV lead export with audit trail and injection hardening
+- Public legal pages, visible AI disclaimers, auth redirect safety, and AI safety evals
+- Full launch still requires external gates: OpenAI key rotation, domain, Stripe activation, email delivery, observability choice, legal/compliance finalization, and production promotion
 
 ## Decisions
 
@@ -266,9 +299,9 @@ Phase 3 automated/sub-agent review passed on AWS. AI-assisted replies are availa
 - Phase 10 added `/privacy`, `/terms`, `/acceptable-use`, `/ai-disclaimer`, footer links, sitemap entries, and visible hosted/widget chat disclaimer copy. Chat input accessibility was improved with a real label and `aria-live` message updates.
 - Phase 10 security fix: auth callback `next` values now use `safeInternalPath`, rejecting protocol-relative URLs, absolute URLs, backslashes, and non-dashboard destinations.
 - Phase 10 audit coverage was expanded for bot, channel, property, knowledge, lead status, appointment status, billing checkout/portal, and profile create actions. Profile creation redirects now include the created profile id to avoid stale success state.
-- Phase 10 checks passed on AWS: `npm run typecheck`, `npm run lint`, `npm test` (18 files, 84 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (15 Chromium tests).
+- Phase 10 checks passed on AWS: `npm run typecheck`, `npm run lint`, `npm test` (18 files, 84 tests), `npm run build`, `npm run test:bundle-secrets`, and `npm run test:e2e` (16 Chromium tests after adding viewer negative coverage).
 - Supabase migration `202606160014_phase10_launch_hardening.sql` was pushed to project `dwvkmxtumugvgytmlbsk` with `npx supabase db push`.
-- Fresh Phase 10 preview deployed at https://realestatechatbot-6sqxb74qo-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated `vercel curl` verified `/privacy` and `/c/sarah-patel`; recent Vercel error-log scan returned no logs.
+- Fresh Phase 10 preview deployed at https://realestatechatbot-aqcnjrjwr-dhakalasaces-projects.vercel.app. Vercel inspect status: Ready. Authenticated `vercel curl` verified `/privacy`, `/terms`, `/login`, and `/c/sarah-patel`; recent Vercel log scan showed only 200 responses for checked routes.
 - AWS disk cleanup before heavy Phase 10 verification removed generated `.next`, npm cache, and test reports. After build/e2e/deploy, root disk remained about 81% used with about 5.8 GB free.
 - `npm audit --omit=dev` still reports 2 moderate production advisories through Next's bundled PostCSS. Latest published `next` is already 16.2.9; npm's suggested force fix is a breaking downgrade to `next@9.3.3`, so this remains a launch watch item until a sane patched Next release is available.
-- Phase 10 is not accepted yet. User manual review of the fresh preview is the next gate. Production promotion and OpenAI key rotation are not done.
+- Phase 10 is complete by automated/browser/sub-agent review. Production promotion, real payment activation, domain attachment, real email delivery, observability/log-drain setup, formal legal/compliance finalization, and OpenAI key rotation are not done.

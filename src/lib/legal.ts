@@ -20,7 +20,7 @@ export const legalPages: LegalPage[] = [
       { heading: "How data is used", body: ["Data is used to operate the chatbot, qualify and route real estate leads, show transcripts and scores to authorized workspace members, process appointment and follow-up workflows, enforce plan limits, and troubleshoot the service."] },
       { heading: "Access controls", body: ["Workspace data is protected by Supabase Row Level Security and server-side authorization. Public chatbot visitors cannot read dashboard data, leads, transcripts, billing records, or private bot configuration."] },
       { heading: "Third-party processors", body: ["The application is hosted on Vercel, stores data in Supabase, can use OpenAI for AI-assisted replies when enabled, can use Stripe for billing when configured, and can use an email provider for follow-up delivery when enabled."] },
-      { heading: "Launch note", body: ["Before public production launch, finalize the support contact, data retention policy, cookie/analytics posture, and any jurisdiction-specific privacy language with counsel."] },
+      { heading: "Retention and requests", body: ["Workspace data is retained while the account is active or as needed to operate, secure, audit, and comply with the service. Workspace owners can request export or deletion review through the configured support channel."] },
     ],
   },
   {
@@ -32,8 +32,8 @@ export const legalPages: LegalPage[] = [
       { heading: "Service scope", body: ["RealEstateChatbot.ai helps agents, teams, and brokerages capture and qualify real estate leads from hosted links, widgets, QR codes, and campaigns. It is not an MLS, IDX feed, CRM of record, legal service, tax service, mortgage advisor, or financial advisor."] },
       { heading: "Customer responsibilities", body: ["Customers are responsible for the accuracy of their own brokerage, listing, property, follow-up, consent, and compliance information. Customers must review transcripts and verify facts before relying on or forwarding them."] },
       { heading: "AI-assisted output", body: ["AI-assisted replies may be incomplete or incorrect. The app keeps workflow state, scoring, authorization, and persistence under application control, but users must verify property facts and professional advice independently."] },
-      { heading: "Availability and changes", body: ["The product is still in pre-launch buildout. Features, limits, billing setup, and policies may change before production launch."] },
-      { heading: "Launch note", body: ["Before public production launch, finalize governing law, warranty, liability, support, cancellation, refund, and dispute terms with counsel."] },
+      { heading: "Availability and changes", body: ["Features, limits, billing setup, support paths, and product policies may change as the service improves. Customers should review the current product terms before using the service with live leads."] },
+      { heading: "Policy updates", body: ["Material policy changes should be reflected in the product or dashboard before teams rely on them for customer-facing lead capture."] },
     ],
   },
   {
